@@ -1393,29 +1393,36 @@
                     document.getElementById('paintSVG').style.display = 'none'; canvas.style.display = 'block'; uploadedImage = true;
                     document.getElementById('canvasLabel').innerText = "Interactive Paint Canvas (Magic Fill Active)";
 					canvas.onclick = function(evt) {
-                        const rect = canvas.getBoundingClientRect(); 
-                        const x = Math.floor(evt.clientX - rect.left); 
-                        const y = Math.floor(evt.clientY - rect.top);
-
-                        if (isSampling) {
-                            // --- MODE A: EYEDROPPER ---
-                            const ctx = canvas.getContext('2d');
-                            const pixel = ctx.getImageData(x, y, 1, 1).data;
-                            const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-                            
-                            // Set the color and find the paint bottle match!
-                            document.getElementById('paintColorPicker').value = hex;
-                            updateColorDisplay(hex);
-                            runMatcher(hex); 
-                            
-                            toggleSampler(); // Auto-off after picking
-                            showToast("Sampled: " + hex);
-                        } else {
-                            // --- MODE B: PAINTING (Flood Fill) ---
-                            const fillColor = hexToRgb(document.getElementById('paintColorPicker').value); 
-                            floodFill(canvas, x, y, fillColor);
-                        }
-                    };
+					    const rect = canvas.getBoundingClientRect();
+					    
+					    // 1. CALCULATE THE SCALE RATIO
+					    // This maps your screen tap to the actual image pixels
+					    const scaleX = canvas.width / rect.width;
+					    const scaleY = canvas.height / rect.height;
+					    
+					    const x = Math.floor((evt.clientX - rect.left) * scaleX);
+					    const y = Math.floor((evt.clientY - rect.top) * scaleY);
+					
+					    if (isSampling) {
+					        const ctx = canvas.getContext('2d');
+					        const pixel = ctx.getImageData(x, y, 1, 1).data;
+					        const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+					        
+					        // 2. SYNC THE PICKERS
+					        // Update the picker in the Lab AND the Matcher so they don't get out of sync
+					        document.getElementById('paintColorPicker').value = hex;
+					        document.getElementById('matchPicker').value = hex; 
+					        
+					        updateColorDisplay(hex);
+					        runMatcher(hex); // This updates the Paint Bench results
+					        
+					        toggleSampler(); 
+					        showToast("Sampled: " + hex);
+					    } else {
+					        const fillColor = hexToRgb(document.getElementById('paintColorPicker').value);
+					        floodFill(canvas, x, y, fillColor);
+					    }
+					};
                 }
                 img.src = event.target.result;
             }
@@ -1614,9 +1621,13 @@
 		function toggleSampler() {
 		    isSampling = !isSampling;
 		    const btn = document.getElementById('samplerBtn');
+		    const canvas = document.getElementById('paintCanvas'); // Add this
+		    
 		    btn.innerText = isSampling ? "🎯 TAP IMAGE TO PICK" : "🔍 EYEDROPPER: OFF";
 		    btn.style.background = isSampling ? "var(--accent)" : "#444";
-		    btn.style.color = isSampling ? "black" : "white";
+		    
+		    // Change the cursor so you know exactly where you are picking
+		    if(canvas) canvas.style.cursor = isSampling ? "crosshair" : "default";
 		}
 		
 		// Update your canvas.onclick inside handleImageUpload to use this logic
@@ -1667,6 +1678,7 @@
 </body>
 
 </html>
+
 
 
 
