@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gunpla-studio-v2.1'; // <--- CHANGE THIS EVERY TIME YOU UPDATE
+const CACHE_NAME = 'gunpla-studio-v2'; // <--- CHANGE THIS EVERY TIME YOU UPDATE
 const ASSETS = [
   './',
   './index.html',
