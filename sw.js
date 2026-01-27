@@ -1,7 +1,8 @@
-const CACHE_NAME = 'gunpla-studio-v3.0'; // <--- CHANGE THIS EVERY TIME YOU UPDATE
+const CACHE_NAME = 'gunpla-studio-v3.1'; // <--- CHANGE THIS EVERY TIME YOU UPDATE
 const ASSETS = [
   './',
   './index.html',
+  './manifest.json'
 ];
 
 // 1. Install & Cache Assets
