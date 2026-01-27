@@ -520,11 +520,13 @@
             display: flex; align-items: center; justify-content: center;
         }
 
-        .model-shadow {
-            width: 50px; height: 90px; background: #333;
-            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-            transition: all 0.4s ease;
-        }
+		.model-shadow {
+		    width: 50px; 
+		    height: 90px; 
+		    background: #333;
+		    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+		    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); /* Makes the shadow move smoothly */
+		}
 
         .exposure-bar {
             background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;
@@ -1951,22 +1953,32 @@
             return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
         }
 	// --- PHOTOGRAPHY MASTER LOGIC ---
-        function updateLightSim() {
-            const setup = document.getElementById('lightSetup').value;
-            const shadow = document.getElementById('modelShadow');
-            const note = document.getElementById('lightNote');
-            
-            if(setup === 'cinematic') {
-                shadow.style.boxShadow = "10px 0 20px rgba(0,0,0,0.8), -5px 0 10px rgba(255,255,255,0.1)";
-                note.innerText = "Key light at 45°. Use a rim light behind the kit for separation.";
-            } else if (setup === 'dramatic') {
-                shadow.style.boxShadow = "40px 0 50px rgba(0,0,0,0.9)";
-                note.innerText = "Side lighting only. Accentuates scribing and panel line depth.";
-            } else if (setup === 'uv') {
-                shadow.style.boxShadow = "0 0 25px #ff0055";
-                note.innerText = "Long exposure. Wave a UV torch over clear parts during the shot.";
-            }
-        }
+		function updateLightSim() {
+		    const setup = document.getElementById('lightSetup').value;
+		    const shadow = document.getElementById('modelShadow');
+		    const note = document.getElementById('lightNote');
+		    
+		    // Reset any previous styles
+		    shadow.style.filter = "none";
+		    shadow.style.background = "#333";
+		
+		    if(setup === 'cinematic') {
+		        // High-key lighting with a soft rim shadow
+		        shadow.style.boxShadow = "15px 5px 25px rgba(0,0,0,0.9), -2px -2px 10px rgba(255,255,255,0.2)";
+		        note.innerText = "Key light at 45°. Use a rim light behind the kit for separation.";
+		    } else if (setup === 'dramatic') {
+		        // Harsh side shadow to emphasize panel lines
+		        shadow.style.boxShadow = "60px 0 40px rgba(0,0,0,1)";
+		        shadow.style.background = "#222"; // Darken the model itself
+		        note.innerText = "Side lighting only. Accentuates scribing and panel line depth.";
+		    } else if (setup === 'uv') {
+		        // Glowing effect for psycho-frames
+		        shadow.style.boxShadow = "0 0 30px #ff0055, 0 0 10px #ff0055";
+		        shadow.style.background = "#444";
+		        shadow.style.filter = "brightness(1.5)";
+		        note.innerText = "Long exposure. Wave a UV torch over clear parts during the shot.";
+		    }
+		}
 
         function calcCameraSettings() {
             const shot = document.getElementById('shotType').value;
@@ -2051,6 +2063,7 @@
 </body>
 
 </html>
+
 
 
 
