@@ -1690,15 +1690,50 @@
     </script>
 
 	<script>
-	  if ('serviceWorker' in navigator) {
-	    navigator.serviceWorker.register('./sw.js')
-	      .then(() => console.log("Service Worker Registered"));
-	  }
-	</script>
+	    if ('serviceWorker' in navigator) {
+	        let refreshing = false;
+	
+	        // 1. Listen for the 'controllerchange' event. 
+	        // This fires when a new service worker takes over control.
+	        navigator.serviceWorker.addEventListener('controllerchange', () => {
+	            if (refreshing) return;
+	            refreshing = true;
+	            // Automatically reload the page to load the new assets
+	            window.location.reload();
+	        });
+	
+	        window.addEventListener('load', () => {
+	            navigator.serviceWorker.register('./sw.js').then(registration => {
+	                console.log('SW registered: ', registration);
+	
+	                // 2. Check for updates manually on every load
+	                registration.update();
+	
+	                // 3. If a new service worker is found, check its state
+	                registration.onupdatefound = () => {
+	                    const installingWorker = registration.installing;
+	                    installingWorker.onstatechange = () => {
+	                        if (installingWorker.state === 'installed') {
+	                            if (navigator.serviceWorker.controller) {
+	                                // At this point, the old content will have been purged 
+	                                // and the fresh content will have been added to the cache.
+	                                console.log('New update available! Reloading...');
+	                                showToast("Updating to Latest Version...");
+	                            }
+	                        }
+	                    };
+	                };
+	            }).catch(registrationError => {
+	                console.log('SW registration failed: ', registrationError);
+	            });
+	        });
+	    }
+	    </script>
 	
 </body>
 
 </html>
+
 
 
 
