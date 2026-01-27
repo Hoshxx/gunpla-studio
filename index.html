@@ -1347,9 +1347,11 @@
             if(hsl.l > 60) {
                  const amt = Math.round((hsl.l - 50) * 1.5);
                  steps.push({ name: "White (C-1)", pct: amt, color: "#fff" });
-            } else if (hsl.l < 40) {
-                 const amt = Math.round((50 - hsl.l) * 1.2);
-                 steps.push({ name: "Black (C-2)", pct: amt, color: "#000" });
+			} else if (hsl.l < 40) {
+                 const blackAmt = Math.round((45 - hsl.l) * 0.6); // Less black
+                 const greyAmt = Math.round((45 - hsl.l) * 0.8);  // More Grey for depth
+                 steps.push({ name: "Black (C-2)", pct: blackAmt, color: "#000" });
+                 steps.push({ name: "Neutral Gray (C-13)", pct: greyAmt, color: "#808080" });
             }
 
             // 3. Adjust Saturation (Grey Factor)
@@ -1685,6 +1687,7 @@
 </body>
 
 </html>
+
 
 
 
