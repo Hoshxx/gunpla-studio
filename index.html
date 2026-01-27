@@ -1959,44 +1959,52 @@
             const shadow = document.getElementById('modelShadow');
             const note = document.getElementById('lightNote');
             
-            shadow.style.filter = "none";
+            // Reset base styles
             shadow.style.background = "#333";
+            shadow.style.filter = "none";
 
             if(setup === 'cinematic') {
-                shadow.style.boxShadow = "15px 5px 25px rgba(0,0,0,0.9), -2px -2px 10px rgba(255,255,255,0.2)";
+                shadow.style.filter = "drop-shadow(15px 5px 8px rgba(0,0,0,0.8))";
                 note.innerText = "Key light at 45°. Use a rim light behind the kit for separation.";
             } else if (setup === 'dramatic') {
-                shadow.style.boxShadow = "60px 0 40px rgba(0,0,0,1)";
-                shadow.style.background = "#222"; 
+                shadow.style.filter = "drop-shadow(40px 0 10px rgba(0,0,0,1))";
+                shadow.style.background = "#111"; // Darkens the kit itself
                 note.innerText = "Side lighting only. Accentuates scribing and panel line depth.";
             } else if (setup === 'uv') {
-                shadow.style.boxShadow = "0 0 30px #ff0055, 0 0 10px #ff0055";
+                shadow.style.filter = "drop-shadow(0 0 12px #ff0055)";
                 shadow.style.background = "#444";
-                shadow.style.filter = "brightness(1.5)";
                 note.innerText = "Long exposure. Wave a UV torch over clear parts during the shot.";
             } else if (setup === 'lightbox') {
-                // Lightbox: Soft glow from all sides, almost no visible shadow
-                shadow.style.boxShadow = "0 0 15px rgba(255,255,255,0.3)";
-                shadow.style.background = "#555";
-                note.innerText = "Even, soft light. Perfect for 'Clean Studio' edits. Watch for reflections on gloss parts.";
+                shadow.style.filter = "drop-shadow(0 0 5px rgba(255,255,255,0.3))";
+                shadow.style.background = "#666"; // Brighter "lit" kit
+                note.innerText = "Even, soft light. Perfect for 'Clean Studio' edits. Watch for reflections.";
             }
+            // Trigger camera update whenever lighting changes
+            calcCameraSettings();
         }
 
         function calcCameraSettings() {
             const shot = document.getElementById('shotType').value;
+            const light = document.getElementById('lightSetup').value;
             const aperture = document.getElementById('resAperture');
             const shutter = document.getElementById('resShutter');
             const note = document.getElementById('resPhotoNote');
             
+            // Logic for Lightbox vs Standard Light
+            const isLightbox = (light === 'lightbox');
+
             if(shot === 'full') { 
-                aperture.innerText = "f/5.6 - f/8.0"; shutter.innerText = "1/15s"; 
-                note.innerText = "Keep the whole kit sharp. Avoid wide apertures to maintain scale."; 
+                aperture.innerText = isLightbox ? "f/11" : "f/5.6 - f/8.0"; 
+                shutter.innerText = isLightbox ? "1/60s" : "1/15s"; 
+                note.innerText = isLightbox ? "Deep focus for the whole kit. Fast shutter thanks to the lightbox." : "Keep the whole kit sharp. Avoid wide apertures to maintain scale."; 
             } else if (shot === 'macro') { 
-                aperture.innerText = "f/11"; shutter.innerText = "1.0s"; 
-                note.innerText = "Needs a tripod. Ensures tiny details stay in sharp focus."; 
+                aperture.innerText = isLightbox ? "f/16" : "f/11"; 
+                shutter.innerText = isLightbox ? "1/10s" : "1.0s"; 
+                note.innerText = "Maximum detail. Use a tripod even in a lightbox for absolute sharpness."; 
             } else if (shot === 'low') { 
-                aperture.innerText = "f/8.0"; shutter.innerText = "1/10s"; 
-                note.innerText = "Lens at foot-level looking up. Mimics a 60ft titan perspective."; 
+                aperture.innerText = isLightbox ? "f/8.0" : "f/5.6"; 
+                shutter.innerText = isLightbox ? "1/100s" : "1/30s"; 
+                note.innerText = "Mimics a 60ft titan perspective. Lightbox allows for a very fast, crisp shot."; 
             }
         }
 
@@ -2065,6 +2073,7 @@
 </body>
 
 </html>
+
 
 
 
