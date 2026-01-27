@@ -1443,10 +1443,28 @@
             ctx.putImageData(imageData, 0, 0);
         }
 
-        function resetPaint() {
-            if(uploadedImage) { const input = document.getElementById('imageLoader'); if(input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { const img = new Image(); img.onload = function() { const canvas = document.getElementById('paintCanvas'); canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); }; img.src = e.target.result; }; reader.readAsDataURL(input.files[0]); } }
-            else { const svg = document.getElementById('paintSVG'); const shapes = svg.querySelectorAll('path, rect, circle'); shapes.forEach(el => { if(el.parentNode.classList.contains('svg-outline') || el.classList.contains('svg-detail')) return; el.style.fill = '#FFFFFF'; }); }
-        }
+		function resetPaint() {
+		    // 1. Clear the hidden file input so the browser "forgets" the photo
+		    const input = document.getElementById('imageLoader');
+		    input.value = ""; 
+		    uploadedImage = false;
+		
+		    // 2. Hide the canvas and bring back the default SVG
+		    document.getElementById('paintCanvas').style.display = 'none';
+		    const svg = document.getElementById('paintSVG');
+		    svg.style.display = 'block';
+		    
+		    // 3. Reset the label text
+		    document.getElementById('canvasLabel').innerText = "Interactive Paint Canvas";
+		
+		    // 4. Wipe all colors off the SVG parts to make them white again
+		    const shapes = svg.querySelectorAll('path, rect, circle');
+		    shapes.forEach(el => {
+		        // Don't accidentally paint the black outlines white!
+		        if(el.parentNode.classList.contains('svg-outline') || el.classList.contains('svg-detail')) return;
+		        el.style.fill = '#FFFFFF';
+		    });
+		}
 
         // --- CORE FUNCTIONS ---
         function calcAirbrush() {
@@ -1678,6 +1696,7 @@
 </body>
 
 </html>
+
 
 
 
