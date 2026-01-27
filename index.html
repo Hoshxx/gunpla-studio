@@ -496,7 +496,43 @@
         .modal-brand { font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; display: inline-block; color: black; }
         .modal-name { font-weight: bold; color: #fff; font-size: 1rem; }
         .modal-acc { font-size: 0.8rem; color: #888; }
+		
+		/* --- PHOTOGRAPHY MASTER STYLES --- */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px; width: 95%; max-width: 1200px; margin-top: 20px; padding-bottom: 50px;
+        }
 
+        .viewfinder {
+            position: relative; background: #000; border-radius: 12px;
+            padding: 30px; border: 1px solid #333; overflow: hidden;
+        }
+
+        .vf-corner { position: absolute; width: 15px; height: 15px; border: 2px solid var(--accent); opacity: 0.6; }
+        .tl { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .tr { top: 15px; right: 15px; border-left: none; border-bottom: none; }
+        .bl { bottom: 15px; left: 15px; border-right: none; border-top: none; }
+        .br { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+
+        .light-sim-container {
+            height: 180px; background: #111; border-radius: 8px; margin: 15px 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .model-shadow {
+            width: 50px; height: 90px; background: #333;
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+            transition: all 0.4s ease;
+        }
+
+        .exposure-bar {
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;
+            border: 1px solid var(--border); margin-top: 10px;
+        }
+
+        .iso-val { font-family: monospace; color: var(--success); font-weight: bold; }
+		
     </style>
 </head>
 <body>
@@ -513,6 +549,7 @@
         <div class="tab" onclick="switchTab('library', this)">Library</div>
         <div class="tab" onclick="switchTab('guide', this)">Tutorials</div>
 		<div class="tab" onclick="switchTab('scribing', this)">Scribing Master</div>
+		<div class="tab" onclick="switchTab('photography', this)">Photography Master</div>
     </div>
 
     <!-- === CREATE TAB === -->
@@ -859,19 +896,68 @@
 	            </div>
 	        </div>
 	    </div>
-    <!-- Match Analysis Modal -->
-    <div id="matchModal" class="modal-overlay" onclick="if(event.target===this) closeModal()">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeModal()">×</button>
-            <h3 style="margin-top:0; color:var(--accent);">Paint Analysis</h3>
-            <p style="color:#888; font-size:0.9rem; margin-bottom:20px;">Recommended real-world paints for this scheme.</p>
-            <div id="modalList"></div>
-        </div>
-    </div>
-
-    <div class="toast" id="toast">Copied!</div>
-
-    <script>
+		<div id="photography" class="view-section">
+		        <div class="photo-grid">
+		            <div class="viewfinder">
+		                <div class="vf-corner tl"></div><div class="vf-corner tr"></div>
+		                <div class="vf-corner bl"></div><div class="vf-corner br"></div>
+		                <h3 style="color:var(--accent); margin-top:0;">Lighting Schematic</h3>
+		                <select id="lightSetup" onchange="updateLightSim()">
+		                    <option value="cinematic">3-Point Cinematic (Hero)</option>
+		                    <option value="dramatic">High Contrast (Side Lit)</option>
+		                    <option value="uv">Psycho-Frame Glow (UV Sync)</option>
+		                </select>
+		                <div class="light-sim-container"><div class="model-shadow" id="modelShadow"></div></div>
+		                <p id="lightNote" style="font-size:0.8rem; color:#888;">Standard Hero setup. Use a rim light behind the kit.</p>
+		            </div>
+		
+		            <div class="bench-card">
+		                <h3 style="color:var(--accent); margin-top:0;">Technical Director</h3>
+		                <label class="ab-label">Shot Type</label>
+		                <select id="shotType" onchange="calcCameraSettings()">
+		                    <option value="full">Full Body (Action)</option>
+		                    <option value="macro">Detail (Macro)</option>
+		                    <option value="low">Ant's Eye View (Scale)</option>
+		                </select>
+		                <div class="exposure-bar">
+		                    <div class="ab-stat"><span>Aperture</span><span class="iso-val" id="resAperture">f/8.0</span></div>
+		                    <div class="ab-stat"><span>Shutter</span><span class="iso-val" id="resShutter">1/15s</span></div>
+		                    <div class="ab-stat"><span>ISO</span><span class="iso-val">100</span></div>
+		                </div>
+		                <p id="resPhotoNote" style="font-size:0.8rem; color:#888; margin-top:10px;">Keep aperture closed to maintain scale.</p>
+		            </div>
+		
+		            <div class="bench-card" style="border-top: 3px solid var(--link);">
+		                <h3 style="color:var(--link); margin-top:0;">Digital Darkroom</h3>
+		                <label class="ab-label">Edit Style</label>
+		                <select id="editStyle" onchange="calcEditSettings()">
+		                    <option value="clean">Clean Studio (Pro)</option>
+		                    <option value="gritty">Real Type (Weathered)</option>
+		                    <option value="glow">Psycho-Frame Burst</option>
+		                </select>
+		                <div class="exposure-bar" style="border-color: rgba(77, 166, 255, 0.3);">
+		                    <div class="ab-stat"><span>Contrast</span><span class="iso-val" id="resContrast">+15</span></div>
+		                    <div class="ab-stat"><span>Clarity</span><span class="iso-val" id="resClarity">+10</span></div>
+		                    <div class="ab-stat"><span>Dehaze</span><span class="iso-val" id="resDehaze">+5</span></div>
+		                </div>
+		                <p id="resEditNote" style="font-size:0.8rem; color:#888; margin-top:10px;">Focus on a clean white balance.</p>
+		            </div>
+		        </div>
+		    </div>
+		
+	    <!-- Match Analysis Modal -->
+	    <div id="matchModal" class="modal-overlay" onclick="if(event.target===this) closeModal()">
+	        <div class="modal-content">
+	            <button class="close-modal" onclick="closeModal()">×</button>
+	            <h3 style="margin-top:0; color:var(--accent);">Paint Analysis</h3>
+	            <p style="color:#888; font-size:0.9rem; margin-bottom:20px;">Recommended real-world paints for this scheme.</p>
+	            <div id="modalList"></div>
+	        </div>
+	    </div>
+	
+	    <div class="toast" id="toast">Copied!</div>
+	
+	    <script>
         // --- PRO EXPANSION PACK (100+ Paints) ---
         const PAINTS = [
             // Mr. Color Standard
@@ -1676,6 +1762,7 @@
             if(tabId === 'bench') runMatcher(document.getElementById('matchPicker').value);
             if(tabId === 'mixer') renderPigments();
 			if(tabId === 'scribing') calcScribing();
+			if(tabId === 'photography') { updateLightSim(); calcCameraSettings(); calcEditSettings(); }
         }
 
         function generate() {
@@ -1863,6 +1950,61 @@
         function rgbToHex(r, g, b) {
             return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
         }
+	// --- PHOTOGRAPHY MASTER LOGIC ---
+        function updateLightSim() {
+            const setup = document.getElementById('lightSetup').value;
+            const shadow = document.getElementById('modelShadow');
+            const note = document.getElementById('lightNote');
+            
+            if(setup === 'cinematic') {
+                shadow.style.boxShadow = "10px 0 20px rgba(0,0,0,0.8), -5px 0 10px rgba(255,255,255,0.1)";
+                note.innerText = "Key light at 45°. Use a rim light behind the kit for separation.";
+            } else if (setup === 'dramatic') {
+                shadow.style.boxShadow = "40px 0 50px rgba(0,0,0,0.9)";
+                note.innerText = "Side lighting only. Accentuates scribing and panel line depth.";
+            } else if (setup === 'uv') {
+                shadow.style.boxShadow = "0 0 25px #ff0055";
+                note.innerText = "Long exposure. Wave a UV torch over clear parts during the shot.";
+            }
+        }
+
+        function calcCameraSettings() {
+            const shot = document.getElementById('shotType').value;
+            const aperture = document.getElementById('resAperture');
+            const shutter = document.getElementById('resShutter');
+            const note = document.getElementById('resPhotoNote');
+            
+            if(shot === 'full') { 
+                aperture.innerText = "f/5.6 - f/8.0"; shutter.innerText = "1/15s"; 
+                note.innerText = "Keep the whole kit sharp. Avoid wide apertures to maintain scale."; 
+            } else if (shot === 'macro') { 
+                aperture.innerText = "f/11"; shutter.innerText = "1.0s"; 
+                note.innerText = "Needs a tripod. Ensures tiny details stay in sharp focus."; 
+            } else if (shot === 'low') { 
+                aperture.innerText = "f/8.0"; shutter.innerText = "1/10s"; 
+                note.innerText = "Lens at foot-level looking up. Mimics a 60ft titan perspective."; 
+            }
+        }
+
+        function calcEditSettings() {
+            const style = document.getElementById('editStyle').value;
+            const contrast = document.getElementById('resContrast');
+            const clarity = document.getElementById('resClarity');
+            const dehaze = document.getElementById('resDehaze');
+            const note = document.getElementById('resEditNote');
+            
+            if(style === 'clean') { 
+                contrast.innerText = "+15"; clarity.innerText = "+10"; dehaze.innerText = "+5"; 
+                note.innerText = "Clean and professional. Small clarity boost for panel lines."; 
+            } else if (style === 'gritty') { 
+                contrast.innerText = "+25"; clarity.innerText = "+45"; dehaze.innerText = "+20"; 
+                note.innerText = "Brings out weathering, dry-brushing, and mechanical grime."; 
+            } else if (style === 'glow') { 
+                contrast.innerText = "-10"; clarity.innerText = "-15"; dehaze.innerText = "-10"; 
+                note.innerText = "Creates a soft 'bloom' effect around glowing psycho-frame parts."; 
+            }
+        }
+	
     </script>
 
 	<script>
@@ -1909,6 +2051,7 @@
 </body>
 
 </html>
+
 
 
 
