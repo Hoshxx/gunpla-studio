@@ -23,3 +23,11 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Forces the waiting service worker to become active
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim()); // Immediately take control of all open tabs
+});
