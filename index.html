@@ -1303,11 +1303,16 @@
         }
 
         // --- MATCHING & MIXING (Bench) ---
-        function runMatcher(hex) {
+			function runMatcher(hex) {
+            // 1. Update the UI color circles
             document.getElementById('matchDisplay').style.background = hex;
             document.getElementById('matchDisplay').innerText = hex.toUpperCase();
             
-            const sorted = PAINTS.map(p => { return { ...p, dist: getDist(hex, p.hex) }; }).sort((a,b) => a.dist - b.dist);
+            // 2. Find and display the top 3 real-world paint matches
+            const sorted = PAINTS.map(p => { 
+                return { ...p, dist: getDist(hex, p.hex) }; 
+            }).sort((a,b) => a.dist - b.dist);
+            
             const results = document.getElementById('matchResults');
             results.innerHTML = '';
             
@@ -1317,16 +1322,27 @@
                 if(p.brand === 'gaia') bClass = 'brand-gaia';
                 if(p.brand === 'tamiya') bClass = 'brand-tamiya';
                 if(p.brand === 'vallejo') bClass = 'brand-vallejo';
-                const div = document.createElement('div'); div.className = 'match-result';
-                div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><div><span class="brand-badge ${bClass}">${p.brand.toUpperCase()}</span><span style="font-weight:bold;">${p.code} ${p.name}</span></div><div style="width:30px; height:30px; border-radius:50%; background:${p.hex}; border:1px solid #555;"></div></div><div style="font-size:0.8rem; color:#888; margin-top:5px;">Match Accuracy: ${Math.max(0, 100 - Math.round(p.dist))}%</div>`;
+                
+                const div = document.createElement('div'); 
+                div.className = 'match-result';
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span class="brand-badge ${bClass}">${p.brand.toUpperCase()}</span>
+                            <span style="font-weight:bold;">${p.code} ${p.name}</span>
+                        </div>
+                        <div style="width:30px; height:30px; border-radius:50%; background:${p.hex}; border:1px solid #555;"></div>
+                    </div>
+                    <div style="font-size:0.8rem; color:#888; margin-top:5px;">Match Accuracy: ${Math.max(0, 100 - Math.round(p.dist))}%</div>
+                `;
                 results.appendChild(div);
             }
             
-            // NEW MECH9 STYLE MIXING ALGO (Updated with Drops)
+            // 3. PRO-MIXING LOGIC (Expert Shading using Grey + Black)
             const hsl = hexToHSL(hex);
             let steps = [];
             
-            // 1. Determine Base Hue
+            // Define the Base Hue
             let baseName = "Base Color";
             let baseHex = "#fff";
             
@@ -1340,44 +1356,43 @@
             else if(hsl.h < 260) { baseName = "Blue (C-5)"; baseHex="#00f"; }
             else { baseName = "Purple (C-67)"; baseHex="purple"; }
 
-            // Simplistic Drop calculation based on Ratio
-            steps.push({ name: baseName + " (Base)", pct: 60, color: baseHex });
+            steps.push({ name: baseName + " (Base)", weight: 60, color: baseHex });
 
-            // 2. Adjust Lightness
+            // Expert Tinting: Mix Neutral Grey with Black for realistic shadows
             if(hsl.l > 60) {
                  const amt = Math.round((hsl.l - 50) * 1.5);
-                 steps.push({ name: "White (C-1)", pct: amt, color: "#fff" });
-			} else if (hsl.l < 40) {
-                 const blackAmt = Math.round((45 - hsl.l) * 0.6); // Less black
-                 const greyAmt = Math.round((45 - hsl.l) * 0.8);  // More Grey for depth
-                 steps.push({ name: "Black (C-2)", pct: blackAmt, color: "#000" });
-                 steps.push({ name: "Neutral Gray (C-13)", pct: greyAmt, color: "#808080" });
+                 steps.push({ name: "White (C-1)", weight: amt, color: "#fff" });
+            } else if (hsl.l < 45) {
+                 const blackWeight = Math.round((45 - hsl.l) * 0.6); 
+                 const greyWeight = Math.round((45 - hsl.l) * 0.8);
+                 steps.push({ name: "Black (C-2)", weight: blackWeight, color: "#000" });
+                 steps.push({ name: "Neutral Gray (C-13)", weight: greyWeight, color: "#808080" });
             }
 
-            // 3. Adjust Saturation (Grey Factor)
-            if(hsl.s < 80 && hsl.s > 10) {
+            if(hsl.s < 75 && hsl.s > 10) {
                 const amt = Math.round((100 - hsl.s) * 0.5);
-                steps.push({ name: "Neutral Gray (C-13)", pct: amt, color: "#808080" });
+                steps.push({ name: "Neutral Gray (C-13)", weight: amt, color: "#808080" });
             }
 
-            // Normalize to ~10 drops total
-            let totalVal = 0; steps.forEach(s => totalVal += s.pct);
-            
+            // 4. Render the 10-Drop Recipe
+            let totalWeight = 0; steps.forEach(s => totalWeight += s.weight);
             let html = "";
+            
             steps.forEach(s => {
-                // Convert abstract percentage to drops (out of 10)
-                let drops = Math.max(1, Math.round((s.pct / totalVal) * 10));
+                let drops = Math.max(1, Math.round((s.weight / totalWeight) * 10));
                 html += `<div class="recipe-line"><span><span class="r-swatch" style="background:${s.color}"></span>${s.name}</span><span>${drops} Drops</span></div>`;
             });
-            html += `<div style="font-size:0.8rem; color:#666; margin-top:10px;">*Ratios approximated to 10-drop batch.</div>`;
-
+            
+            html += `<div style="font-size:0.8rem; color:#666; margin-top:10px;">*Expert Tip: Neutral Grey prevents dark colors from looking "flat".</div>`;
             document.getElementById('mixingOutput').innerHTML = html;
         }
 
         // --- PAINT LAB LOGIC ---
         function updateColorDisplay(color) {
             const disp = document.getElementById('colorDisplay');
-            disp.style.background = color; disp.style.color = hexToHSL(color).l > 50 ? 'black' : 'white'; disp.innerText = color.toUpperCase();
+            disp.style.background = color; 
+            disp.style.color = hexToHSL(color).l > 50 ? 'black' : 'white'; 
+            disp.innerText = color.toUpperCase();
         }
 
         function handlePaintClick(e) {
@@ -1388,71 +1403,7 @@
             }
         }
 
-        function handleImageUpload(e) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.getElementById('paintCanvas');
-                    const ctx = canvas.getContext('2d');
-                    let w = img.width; let h = img.height; const maxW = 350; const maxH = 550;
-                    if(w > maxW || h > maxH) { const ratio = Math.min(maxW/w, maxH/h); w *= ratio; h *= ratio; }
-                    canvas.width = w; canvas.height = h;
-                    ctx.drawImage(img, 0, 0, w, h);
-					currentImgReference = img;
-                    document.getElementById('paintSVG').style.display = 'none'; canvas.style.display = 'block'; uploadedImage = true;
-                    document.getElementById('canvasLabel').innerText = "Interactive Paint Canvas (Magic Fill Active)";
-					canvas.onclick = function(evt) {
-					    const rect = canvas.getBoundingClientRect();
-					    
-					    // 1. CALCULATE THE SCALE RATIO
-					    // This maps your screen tap to the actual image pixels
-					    const scaleX = canvas.width / rect.width;
-					    const scaleY = canvas.height / rect.height;
-					    
-					    const x = Math.floor((evt.clientX - rect.left) * scaleX);
-					    const y = Math.floor((evt.clientY - rect.top) * scaleY);
-					
-					    if (isSampling) {
-					        const ctx = canvas.getContext('2d');
-					        const pixel = ctx.getImageData(x, y, 1, 1).data;
-					        const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-					        
-					        // 2. SYNC THE PICKERS
-					        // Update the picker in the Lab AND the Matcher so they don't get out of sync
-					        document.getElementById('paintColorPicker').value = hex;
-					        document.getElementById('matchPicker').value = hex; 
-					        
-					        updateColorDisplay(hex);
-					        runMatcher(hex); // This updates the Paint Bench results
-					        
-					        toggleSampler(); 
-					        showToast("Sampled: " + hex);
-					    } else {
-					        const fillColor = hexToRgb(document.getElementById('paintColorPicker').value);
-					        floodFill(canvas, x, y, fillColor);
-					    }
-					};
-                }
-                img.src = event.target.result;
-            }
-            reader.readAsDataURL(e.target.files[0]);
-        }
-
-        function floodFill(canvas, startX, startY, fillColor) {
-            const ctx = canvas.getContext('2d'); const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height); const width = imageData.width; const height = imageData.height; const data = imageData.data;
-            const startPos = (startY * width + startX) * 4; const startR = data[startPos]; const startG = data[startPos + 1]; const startB = data[startPos + 2];
-            if (startR === fillColor.r && startG === fillColor.g && startB === fillColor.b) return;
-            const visited = new Uint8Array(width * height); const stack = [[startX, startY]]; const tolerance = 50; 
-            function colorMatch(pos) { const r = data[pos]; const g = data[pos + 1]; const b = data[pos + 2]; return Math.abs(r - startR) < tolerance && Math.abs(g - startG) < tolerance && Math.abs(b - startB) < tolerance; }
-            while (stack.length) {
-                const [x, y] = stack.pop(); if (x < 0 || x >= width || y < 0 || y >= height) continue;
-                const pixelIndex = y * width + x; if (visited[pixelIndex]) continue; const pos = pixelIndex * 4;
-                if (colorMatch(pos)) { data[pos] = fillColor.r; data[pos + 1] = fillColor.g; data[pos + 2] = fillColor.b; data[pos + 3] = 255; visited[pixelIndex] = 1; stack.push([x + 1, y]); stack.push([x - 1, y]); stack.push([x, y + 1]); stack.push([x, y - 1]); }
-            }
-            ctx.putImageData(imageData, 0, 0);
-        }
-		function wipePaint() {
+        function wipePaint() {
             if (uploadedImage && currentImgReference) {
                 const canvas = document.getElementById('paintCanvas');
                 const ctx = canvas.getContext('2d');
@@ -1469,28 +1420,21 @@
                 showToast("Canvas Wiped!");
             }
         }
-		function resetPaint() {
-		    // 1. Clear the hidden file input so the browser "forgets" the photo
-		    const input = document.getElementById('imageLoader');
-		    input.value = ""; 
-		    uploadedImage = false;
-		
-		    // 2. Hide the canvas and bring back the default SVG
-		    document.getElementById('paintCanvas').style.display = 'none';
-		    const svg = document.getElementById('paintSVG');
-		    svg.style.display = 'block';
-		    
-		    // 3. Reset the label text
-		    document.getElementById('canvasLabel').innerText = "Interactive Paint Canvas";
-		
-		    // 4. Wipe all colors off the SVG parts to make them white again
-		    const shapes = svg.querySelectorAll('path, rect, circle');
-		    shapes.forEach(el => {
-		        // Don't accidentally paint the black outlines white!
-		        if(el.parentNode.classList.contains('svg-outline') || el.classList.contains('svg-detail')) return;
-		        el.style.fill = '#FFFFFF';
-		    });
-		}
+
+        function resetPaint() {
+            const input = document.getElementById('imageLoader');
+            input.value = ""; 
+            uploadedImage = false;
+            document.getElementById('paintCanvas').style.display = 'none';
+            const svg = document.getElementById('paintSVG');
+            svg.style.display = 'block';
+            document.getElementById('canvasLabel').innerText = "Interactive Paint Canvas";
+            const shapes = svg.querySelectorAll('path, rect, circle');
+            shapes.forEach(el => {
+                if(el.parentNode.classList.contains('svg-outline') || el.classList.contains('svg-detail')) return;
+                el.style.fill = '#FFFFFF';
+            });
+        }
 
         // --- CORE FUNCTIONS ---
         function calcAirbrush() {
@@ -1687,6 +1631,7 @@
 </body>
 
 </html>
+
 
 
 
