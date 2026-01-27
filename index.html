@@ -1010,8 +1010,9 @@
             { name: "Mercuone", series: "BUILD", colors: ["#0044CC", "#002266", "#F7C600", "#1A1A1A"] }
         ];
 
-        let currentFilter = 'all';
+		let currentFilter = 'all';
         let uploadedImage = null;
+        let currentImgReference = null; // This remembers your clean photo
         let currentPalette = [];
         let mixPalette = [];
 
@@ -1396,6 +1397,7 @@
                     if(w > maxW || h > maxH) { const ratio = Math.min(maxW/w, maxH/h); w *= ratio; h *= ratio; }
                     canvas.width = w; canvas.height = h;
                     ctx.drawImage(img, 0, 0, w, h);
+					currentImgReference = img;
                     document.getElementById('paintSVG').style.display = 'none'; canvas.style.display = 'block'; uploadedImage = true;
                     document.getElementById('canvasLabel').innerText = "Interactive Paint Canvas (Magic Fill Active)";
 					canvas.onclick = function(evt) {
@@ -1448,7 +1450,23 @@
             }
             ctx.putImageData(imageData, 0, 0);
         }
-
+		function wipePaint() {
+            if (uploadedImage && currentImgReference) {
+                const canvas = document.getElementById('paintCanvas');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(currentImgReference, 0, 0, canvas.width, canvas.height);
+                showToast("Edits Wiped!");
+            } else {
+                const svg = document.getElementById('paintSVG');
+                const shapes = svg.querySelectorAll('path, rect, circle');
+                shapes.forEach(el => {
+                    if(el.parentNode.classList.contains('svg-outline') || el.classList.contains('svg-detail')) return;
+                    el.style.fill = '#FFFFFF';
+                });
+                showToast("Canvas Wiped!");
+            }
+        }
 		function resetPaint() {
 		    // 1. Clear the hidden file input so the browser "forgets" the photo
 		    const input = document.getElementById('imageLoader');
@@ -1655,41 +1673,6 @@
 		}
 		
 		// Update your canvas.onclick inside handleImageUpload to use this logic
-		function setupEyedropper(canvas) {
-		    canvas.addEventListener('click', function(evt) {
-		        const rect = canvas.getBoundingClientRect();
-		        const x = Math.floor(evt.clientX - rect.left);
-		        const y = Math.floor(evt.clientY - rect.top);
-		        const ctx = canvas.getContext('2d');
-		
-		        if (isSampling) {
-		            // Get pixel data
-		            const pixel = ctx.getImageData(x, y, 1, 1).data;
-		            const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-		            
-		            // Set the picked color as active
-		            document.getElementById('paintColorPicker').value = hex;
-		            updateColorDisplay(hex);
-		            
-		            // Automatically switch back to paint mode
-		            toggleSampler();
-		            showToast("Color Sampled: " + hex);
-		            
-		            // OPTIONAL: Run the matcher immediately
-		            runMatcher(hex); 
-		        } else {
-		            // Your existing floodFill logic
-		            const fillColor = hexToRgb(document.getElementById('paintColorPicker').value);
-		            floodFill(canvas, x, y, fillColor);
-		        }
-		    });
-		}
-		
-		// Helper function needed for the sampler
-		function rgbToHex(r, g, b) {
-		    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
-		}
-		
     </script>
 
 	<script>
@@ -1702,6 +1685,7 @@
 </body>
 
 </html>
+
 
 
 
