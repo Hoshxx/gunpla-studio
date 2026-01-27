@@ -1374,19 +1374,29 @@
                 steps.push({ name: "Neutral Gray (C-13)", weight: amt, color: "#808080" });
             }
 
-            // 4. Render the 10-Drop Recipe
-            let totalWeight = 0; steps.forEach(s => totalWeight += s.weight);
-            let html = "";
-            
-            steps.forEach(s => {
-                let drops = Math.max(1, Math.round((s.weight / totalWeight) * 10));
-                html += `<div class="recipe-line"><span><span class="r-swatch" style="background:${s.color}"></span>${s.name}</span><span>${drops} Drops</span></div>`;
-            });
-            
-            html += `<div style="font-size:0.8rem; color:#666; margin-top:10px;">*Expert Tip: Neutral Grey prevents dark colors from looking "flat".</div>`;
-            document.getElementById('mixingOutput').innerHTML = html;
-        }
-
+			// 4. Combine duplicate paints and Render the 10-Drop Recipe
+		    const combinedSteps = {};
+		    steps.forEach(s => {
+		        if (combinedSteps[s.name]) {
+		            combinedSteps[s.name].weight += s.weight;
+		        } else {
+		            combinedSteps[s.name] = { weight: s.weight, color: s.color };
+		        }
+		    });
+		
+		    let totalWeight = 0; 
+		    Object.values(combinedSteps).forEach(s => totalWeight += s.weight);
+		    
+		    let html = "";
+		    for (const name in combinedSteps) {
+		        const s = combinedSteps[name];
+		        let drops = Math.max(1, Math.round((s.weight / totalWeight) * 10));
+		        html += `<div class="recipe-line"><span><span class="r-swatch" style="background:${s.color}"></span>${name}</span><span>${drops} Drops</span></div>`;
+		    }
+    
+    html += `<div style="font-size:0.8rem; color:#666; margin-top:10px;">*Expert Tip: Neutral Grey prevents dark colors from looking "flat".</div>`;
+    document.getElementById('mixingOutput').innerHTML = html;
+}
         // --- PAINT LAB LOGIC ---
         function updateColorDisplay(color) {
             const disp = document.getElementById('colorDisplay');
@@ -1618,7 +1628,10 @@
 		    if(canvas) canvas.style.cursor = isSampling ? "crosshair" : "default";
 		}
 		
-		// Update your canvas.onclick inside handleImageUpload to use this logic
+	// Translator for the Eyedropper
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+        }
     </script>
 
 	<script>
@@ -1631,6 +1644,7 @@
 </body>
 
 </html>
+
 
 
 
