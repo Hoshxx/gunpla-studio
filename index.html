@@ -155,14 +155,15 @@
             filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
         }
 
-        #paintCanvas {
-            max-width: 100%;
-            max-height: 550px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            background: white;
-            cursor: crosshair;
-            display: none; /* Hidden by default */
-        }
+		#paintCanvas {
+		    max-width: 100%;
+		    height: auto; /* Change this from a fixed height to auto */
+		    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+		    background: white;
+		    cursor: crosshair;
+		    display: none;
+		    border-radius: 8px; /* Optional: keeps it looking clean */
+		}
         
         .svg-outline, .svg-detail { pointer-events: none; }
         .svg-outline { fill: none; stroke: #111; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
@@ -1701,30 +1702,37 @@
             });
         }
 		// --- IMAGE & CANVAS ENGINE ---
-        function handleImageUpload(event) {
-            const reader = new FileReader();
-            const canvas = document.getElementById('paintCanvas');
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            const svg = document.getElementById('paintSVG');
-
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    // Switch from SVG to Canvas
-                    uploadedImage = true;
-                    currentImgReference = img;
-                    svg.style.display = 'none';
-                    canvas.style.display = 'block';
-                    document.getElementById('canvasLabel').innerText = "Photo Mode: Tap to Paint or Sample";
-
-                    // Draw image to fit canvas
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                }
-                img.src = e.target.result;
-            }
-            reader.readAsDataURL(event.target.files[0]);
-        }
+			function handleImageUpload(event) {
+			    const reader = new FileReader();
+			    const canvas = document.getElementById('paintCanvas');
+			    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+			    const svg = document.getElementById('paintSVG');
+			
+			    reader.onload = function(e) {
+			        const img = new Image();
+			        img.onload = function() {
+			            uploadedImage = true;
+			            currentImgReference = img;
+			            svg.style.display = 'none';
+			            canvas.style.display = 'block';
+			            document.getElementById('canvasLabel').innerText = "Photo Mode: Tap to Paint or Sample";
+			
+			            // --- THE FIX: RESIZE CANVAS TO MATCH PHOTO ---
+			            const maxWidth = 500; // This matches your .preview-box width
+			            const scale = maxWidth / img.width;
+			            
+			            // Set the canvas to the new proportional size
+			            canvas.width = maxWidth;
+			            canvas.height = img.height * scale;
+			
+			            // Draw the image perfectly onto the new size
+			            ctx.clearRect(0, 0, canvas.width, canvas.height);
+			            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+			        }
+			        img.src = e.target.result;
+			    }
+			    reader.readAsDataURL(event.target.files[0]);
+			}
 
         // Logic for interacting with the uploaded photo
         document.getElementById('paintCanvas').onclick = function(e) {
@@ -2151,6 +2159,7 @@
 </body>
 
 </html>
+
 
 
 
