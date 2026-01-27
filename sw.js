@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gunpla-studio-v1';
+const CACHE_NAME = 'gunpla-studio-v2';
 const ASSETS = [
   './',
   './index.html',
