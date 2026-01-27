@@ -668,43 +668,47 @@
     </div>
 
     <!-- === PAINT LAB TAB === -->
-	<div id="paintlab" class="view-section">
-	        <div class="create-container">
-	            <div class="generator-box" style="max-width:300px;">
-	                <h3 style="margin:0 0 10px 0;">Paint Lab</h3>
-	                
-	                <button id="samplerBtn" class="action-btn" style="background:#444; margin-bottom:10px;" onclick="toggleSampler()">
-	                    🔍 EYEDROPPER: OFF
-	                </button>
-	            
-	                <label class="file-upload-btn">📂 Upload Own Gunpla Image<input type="file" id="imageLoader" accept="image/*" style="display:none;" onchange="handleImageUpload(event)"></label>
-	                
-	                <label style="color:#888;">ACTIVE COLOR</label>
-	                <div class="color-wrapper" id="colorTrigger">
-	                    <div id="colorDisplay" style="background:#E61E25;">PICK COLOR</div>
-	                    <input type="color" id="paintColorPicker" value="#E61E25" oninput="updateColorDisplay(this.value)">
-	                </div>
-	
-	                <div style="display:flex; gap:10px; margin-top:20px;">
-	                    <button class="action-btn" style="background:#444;" onclick="wipePaint()">WIPE PAINT</button>
-	                    <button class="action-btn" style="background:var(--accent-red); color:white;" onclick="resetPaint()">DELETE PHOTO</button>
-	                </div>
-	            </div>
-	
-	            <div class="preview-box">
-	                <div class="preview-label" id="canvasLabel">Interactive Paint Canvas</div>
-	                <svg id="paintSVG" viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg" onclick="handlePaintClick(event)">
-	                    <g><path fill="#fff" d="M110,430 L190,430 L200,470 L100,470 Z" /> <rect fill="#fff" x="135" y="80" width="30" height="20" /> <circle fill="#fff" cx="90" cy="120" r="15" /> <circle fill="#fff" cx="210" cy="120" r="15" /> <rect fill="#fff" x="70" y="200" width="20" height="20" /> <rect fill="#fff" x="210" y="200" width="20" height="20" /> <path fill="#fff" d="M50,260 L80,260 L75,290 L55,290 Z" /> <path fill="#fff" d="M220,260 L250,260 L245,290 L225,290 Z" /> <rect fill="#fff" x="110" y="320" width="30" height="30" /> <rect fill="#fff" x="160" y="320" width="30" height="30" /> <path fill="#fff" d="M100,460 L200,460 L210,490 L90,490 Z" /></g>
-	                    <g><path fill="#fff" d="M100,100 L200,100 L190,160 L110,160 Z" /> <path fill="#fff" d="M110,440 L190,440 L180,470 L120,470 Z" /> <rect fill="#fff" x="135" y="110" width="30" height="40" rx="2" /> <path fill="#fff" d="M200,100 L240,90 L250,140 L200,130 Z" /> <path fill="#fff" d="M100,100 L60,90 L50,140 L100,130 Z" /></g>
-	                    <g><path fill="#fff" d="M120,30 L180,30 L185,70 L170,90 L130,90 L115,70 L120,30 Z" /> <path fill="#fff" d="M50,100 L100,110 L100,140 L50,150 Z" /> <path fill="#fff" d="M250,100 L200,110 L200,140 L250,150 Z" /> <rect fill="#fff" x="60" y="150" width="35" height="50" /> <rect fill="#fff" x="205" y="150" width="35" height="50" /> <path fill="#fff" d="M55,210 L85,210 L90,260 L50,260 Z" /> <path fill="#fff" d="M215,210 L245,210 L250,260 L210,260 Z" /> <path fill="#fff" d="M110,160 L190,160 L200,200 L100,200 Z" /> <path fill="#fff" d="M100,170 L80,230 L120,230 L120,170 Z" /> <path fill="#fff" d="M200,170 L220,230 L180,230 L180,170 Z" /> <rect fill="#fff" x="125" y="170" width="50" height="60" /> <path fill="#fff" d="M110,230 L145,230 L140,310 L115,310 Z" /> <path fill="#fff" d="M190,230 L155,230 L160,310 L185,310 Z" /> <path fill="#fff" d="M105,340 L145,340 L150,430 L100,430 Z" /> <path fill="#fff" d="M195,340 L155,340 L150,430 L200,430 Z" /></g>
-	                    <g><path fill="#fff" d="M150,60 L120,20 L125,50 L150,60 L175,50 L180,20 Z" /> <path fill="#fff" d="M130,70 L170,70 L165,80 L135,80 Z" /> <rect fill="#fff" x="110" y="115" width="20" height="10" /> <rect fill="#fff" x="170" y="115" width="20" height="10" /> <path fill="#fff" d="M140,180 L160,180 L150,200 Z" /> <path fill="#fff" d="M115,350 L135,350 L130,370 L120,370 Z" /> <path fill="#fff" d="M185,350 L165,350 L170,370 L180,370 Z" /></g>
-	                    <g class="svg-detail"><line x1="150" y1="30" x2="150" y2="60" /> <line x1="75" y1="125" x2="100" y2="125" /> <line x1="200" y1="125" x2="225" y2="125" /> <line x1="125" y1="230" x2="125" y2="280" /> <line x1="175" y1="230" x2="175" y2="280" /> <line x1="125" y1="390" x2="125" y2="430" /> <line x1="175" y1="390" x2="175" y2="430" /> <line x1="60" y1="175" x2="95" y2="175" /> <line x1="205" y1="175" x2="240" y2="175" /></g>
-	                    <g class="svg-outline"><path d="M120,30 L180,30 L185,70 L170,90 L130,90 L115,70 L120,30 Z" /> <path d="M150,60 L120,20 L125,50 L150,60 L175,50 L180,20 Z" /> <path d="M100,100 L200,100 L190,160 L110,160 Z" /> <path d="M50,100 L100,110 L100,140 L50,150 Z" /> <path d="M250,100 L200,110 L200,140 L250,150 Z" /> <path d="M55,210 L85,210 L90,260 L50,260 Z" /> <path d="M215,210 L245,210 L250,260 L210,260 Z" /> <path d="M105,340 L145,340 L150,430 L100,430 Z" /> <path d="M195,340 L155,340 L150,430 L200,430 Z" /> <path d="M110,160 L190,160 L200,200 L100,200 Z" /> <line x1="150" y1="200" x2="150" y2="230" /></g>
-	                </svg>
-	                <canvas id="paintCanvas" width="300" height="500"></canvas>
-	            </div>
-	        </div>
-	    </div>
+		<div id="paintlab" class="view-section">
+		    <div class="create-container">
+		        <div class="generator-box" style="max-width:300px;">
+		            <h3 style="margin:0 0 10px 0;">Paint Lab</h3>
+		            
+		            <button id="samplerBtn" class="action-btn" style="background:#444; margin-bottom:10px;" onclick="toggleSampler()">
+		                🔍 EYEDROPPER: OFF
+		            </button>
+		        
+		            <label class="file-upload-btn">📂 Upload Own Gunpla Image<input type="file" id="imageLoader" accept="image/*" style="display:none;" onchange="handleImageUpload(event)"></label>
+		            
+		            <label style="color:#888;">ACTIVE COLOR</label>
+		            <div class="color-wrapper" id="colorTrigger">
+		                <div id="colorDisplay" style="background:#E61E25;">PICK COLOR</div>
+		                <input type="color" id="paintColorPicker" value="#E61E25" oninput="updateColorDisplay(this.value)">
+		            </div>
+		            
+		            <label style="color:#888; margin-top:15px; display:block;">BRUSH SIZE: <span id="brushSizeDisplay">15</span>px</label>
+		            <input type="range" id="brushSize" min="5" max="50" value="15" style="width:100%; cursor:pointer;" oninput="document.getElementById('brushSizeDisplay').innerText = this.value">
+		
+		            <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+		                <div style="display:flex; gap:10px;">
+		                    <button class="action-btn" style="background:#444;" onclick="wipePaint()">WIPE</button>
+		                    <button class="action-btn" style="background:var(--accent-red); color:white;" onclick="resetPaint()">DELETE</button>
+		                </div>
+		                <button class="action-btn" style="background:var(--success); color:black; font-weight:bold;" onclick="downloadCanvas()">💾 SAVE TO DEVICE</button>
+		            </div>
+		        </div>
+		
+		        <div class="preview-box">
+		            <div class="preview-label" id="canvasLabel">Interactive Paint Canvas</div>
+		            <svg id="paintSVG" viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg" onclick="handlePaintClick(event)">
+		                <g fill="#fff"><path d="M110,430 L190,430 L200,470 L100,470 Z" /><rect x="135" y="80" width="30" height="20" /><circle cx="90" cy="120" r="15" /><circle cx="210" cy="120" r="15" /><rect x="70" y="200" width="20" height="20" /><rect x="210" y="200" width="20" height="20" /><path d="M50,260 L80,260 L75,290 L55,290 Z" /><path d="M220,260 L250,260 L245,290 L225,290 Z" /><rect x="110" y="320" width="30" height="30" /><rect x="160" y="320" width="30" height="30" /><path d="M100,460 L200,460 L210,490 L90,490 Z" /></g>
+		                <g fill="#fff"><path d="M100,100 L200,100 L190,160 L110,160 Z" /><path d="M110,440 L190,440 L180,470 L120,470 Z" /><rect x="135" y="110" width="30" height="40" rx="2" /><path d="M200,100 L240,90 L250,140 L200,130 Z" /><path d="M100,100 L60,90 L50,140 L100,130 Z" /></g>
+		                <g fill="#fff"><path d="M120,30 L180,30 L185,70 L170,90 L130,90 L115,70 L120,30 Z" /><path d="M50,100 L100,110 L100,140 L50,150 Z" /><path d="M250,100 L200,110 L200,140 L250,150 Z" /><rect x="60" y="150" width="35" height="50" /><rect x="205" y="150" width="35" height="50" /><path d="M55,210 L85,210 L90,260 L50,260 Z" /><path d="M215,210 L245,210 L250,260 L210,260 Z" /><path d="M110,160 L190,160 L200,200 L100,200 Z" /><path d="M100,170 L80,230 L120,230 L120,170 Z" /><path d="M200,170 L220,230 L180,230 L180,170 Z" /><rect x="125" y="170" width="50" height="60" /><path d="M110,230 L145,230 L140,310 L115,310 Z" /><path d="M190,230 L155,230 L160,310 L185,310 Z" /><path d="M105,340 L145,340 L150,430 L100,430 Z" /><path d="M195,340 L155,340 L150,430 L200,430 Z" /></g>
+		                <g class="svg-detail"><line x1="150" y1="30" x2="150" y2="60" /><line x1="75" y1="125" x2="100" y2="125" /><line x1="200" y1="125" x2="225" y2="125" /><line x1="125" y1="230" x2="125" y2="280" /><line x1="175" y1="230" x2="175" y2="280" /><line x1="125" y1="390" x2="125" y2="430" /><line x1="175" y1="390" x2="175" y2="430" /><line x1="60" y1="175" x2="95" y2="175" /><line x1="205" y1="175" x2="240" y2="175" /></g>
+		                <g class="svg-outline"><path d="M120,30 L180,30 L185,70 L170,90 L130,90 L115,70 L120,30 Z" /><path d="M150,60 L120,20 L125,50 L150,60 L175,50 L180,20 Z" /><path d="M100,100 L200,100 L190,160 L110,160 Z" /><path d="M50,100 L100,110 L100,140 L50,150 Z" /><path d="M250,100 L200,110 L200,140 L250,150 Z" /><path d="M55,210 L85,210 L90,260 L50,260 Z" /><path d="M215,210 L245,210 L250,260 L210,260 Z" /><path d="M105,340 L145,340 L150,430 L100,430 Z" /><path d="M195,340 L155,340 L150,430 L200,430 Z" /><path d="M110,160 L190,160 L200,200 L100,200 Z" /><line x1="150" y1="200" x2="150" y2="230" /></g>
+		            </svg>
+		            <canvas id="paintCanvas" width="300" height="500"></canvas>
+		        </div>
+		    </div>
 
     <!-- === PAINT BENCH === -->
     <div id="bench" class="view-section">
@@ -1663,7 +1667,7 @@
 
         function handlePaintClick(e) {
             const color = document.getElementById('paintColorPicker').value;
-            if (['path', 'rect', 'circle', 'line', 'polygon'].includes(e.target.tagName)) {
+            if (['path', 'rect', 'circle', 'line', 'polygon'].includes(e.target.tagName.toLowerCase())) {
                 if(e.target.parentNode.classList.contains('svg-outline') || e.target.classList.contains('svg-detail')) return;
                 e.target.style.fill = color;
             }
@@ -1752,13 +1756,14 @@
                 toggleSampler(); // Turn off sampler after pick
                 showToast("Color Sampled!");
             } else {
-                // PAINT MODE (Draw a soft circle)
-                const color = document.getElementById('paintColorPicker').value;
-                ctx.fillStyle = color;
-                ctx.globalAlpha = 0.5; // Transparency makes it look more like real paint
-                ctx.beginPath();
-                ctx.arc(x, y, 15, 0, Math.PI * 2);
-                ctx.fill();
+				// PAINT MODE (Draw a soft circle)
+				const color = document.getElementById('paintColorPicker').value;
+				const size = document.getElementById('brushSize').value; // <--- Get size from slider
+				ctx.fillStyle = color;
+				ctx.globalAlpha = 0.5;
+				ctx.beginPath();
+				ctx.arc(x, y, size, 0, Math.PI * 2); // <--- Use the slider value here
+				ctx.fill();
                 ctx.globalAlpha = 1.0;
             }
         };
@@ -2092,6 +2097,25 @@
                 note.innerText = "Official promo style. Blown-out highlights create a white void.";
             }
         }
+			function downloadCanvas() {
+		    let link = document.createElement('a');
+		    let canvas = document.getElementById('paintCanvas');
+		    let svg = document.getElementById('paintSVG');
+		
+		    if (uploadedImage) {
+		        // If you uploaded a photo, download the Canvas version
+		        link.download = 'hosh-studio-build.png';
+		        link.href = canvas.toDataURL();
+		    } else {
+		        // If using lineart, convert SVG to a downloadable format
+		        const svgData = new XMLSerializer().serializeToString(svg);
+		        const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+		        link.download = 'hosh-studio-scheme.svg';
+		        link.href = URL.createObjectURL(svgBlob);
+		    }
+		    link.click();
+		    showToast("Downloading Design...");
+		}
 		// --- THE ENGINE START (This is the only block you need at the bottom) ---
         window.addEventListener('load', () => {
             // 1. Run the basic tool logic
@@ -2159,6 +2183,7 @@
 </body>
 
 </html>
+
 
 
 
