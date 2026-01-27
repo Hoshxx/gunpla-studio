@@ -1,9 +1,7 @@
-const CACHE_NAME = 'gunpla-studio-v2'; // <--- CHANGE THIS EVERY TIME YOU UPDATE
+const CACHE_NAME = 'gunpla-studio-v3.0'; // <--- CHANGE THIS EVERY TIME YOU UPDATE
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json',
-  'https://img.icons8.com/color/512/paint-bucket.png'
 ];
 
 // 1. Install & Cache Assets
