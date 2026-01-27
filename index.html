@@ -1445,7 +1445,60 @@
                 el.style.fill = '#FFFFFF';
             });
         }
+		// --- IMAGE & CANVAS ENGINE ---
+        function handleImageUpload(event) {
+            const reader = new FileReader();
+            const canvas = document.getElementById('paintCanvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            const svg = document.getElementById('paintSVG');
 
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Switch from SVG to Canvas
+                    uploadedImage = true;
+                    currentImgReference = img;
+                    svg.style.display = 'none';
+                    canvas.style.display = 'block';
+                    document.getElementById('canvasLabel').innerText = "Photo Mode: Tap to Paint or Sample";
+
+                    // Draw image to fit canvas
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        // Logic for interacting with the uploaded photo
+        document.getElementById('paintCanvas').onclick = function(e) {
+            if (!uploadedImage) return;
+            
+            const rect = this.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (this.width / rect.width);
+            const y = (e.clientY - rect.top) * (this.height / rect.height);
+            const ctx = this.getContext('2d');
+            
+            if (isSampling) {
+                // EYEDROPPER MODE
+                const pixel = ctx.getImageData(x, y, 1, 1).data;
+                const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+                updateColorDisplay(hex);
+                document.getElementById('paintColorPicker').value = hex;
+                toggleSampler(); // Turn off sampler after pick
+                showToast("Color Sampled!");
+            } else {
+                // PAINT MODE (Draw a soft circle)
+                const color = document.getElementById('paintColorPicker').value;
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.5; // Transparency makes it look more like real paint
+                ctx.beginPath();
+                ctx.arc(x, y, 15, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        };
         // --- CORE FUNCTIONS ---
         function calcAirbrush() {
             const model = document.getElementById('abModel').value; const tech = document.getElementById('abTech').value; const paint = document.getElementById('abPaint').value;
@@ -1617,16 +1670,18 @@
 		let isSampling = false;
 		
 		function toggleSampler() {
-		    isSampling = !isSampling;
-		    const btn = document.getElementById('samplerBtn');
-		    const canvas = document.getElementById('paintCanvas'); // Add this
-		    
-		    btn.innerText = isSampling ? "🎯 TAP IMAGE TO PICK" : "🔍 EYEDROPPER: OFF";
-		    btn.style.background = isSampling ? "var(--accent)" : "#444";
-		    
-		    // Change the cursor so you know exactly where you are picking
-		    if(canvas) canvas.style.cursor = isSampling ? "crosshair" : "default";
-		}
+            isSampling = !isSampling;
+            const btn = document.getElementById('samplerBtn');
+            const canvas = document.getElementById('paintCanvas');
+            const svg = document.getElementById('paintSVG');
+            
+            btn.innerText = isSampling ? "🎯 TAP IMAGE TO PICK" : "🔍 EYEDROPPER: OFF";
+            btn.style.background = isSampling ? "var(--accent)" : "#444";
+            
+            const cursorStyle = isSampling ? "crosshair" : "default";
+            if(canvas) canvas.style.cursor = cursorStyle;
+            if(svg) svg.style.cursor = cursorStyle;
+        }
 		
 	// Translator for the Eyedropper
         function rgbToHex(r, g, b) {
@@ -1644,6 +1699,7 @@
 </body>
 
 </html>
+
 
 
 
