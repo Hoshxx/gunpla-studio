@@ -23,7 +23,12 @@
             --link: #4da6ff;
             --success: #00e676;
         }
-
+		* {
+            box-sizing: border-box; /* This keeps the search bar from overflowing */
+            -webkit-appearance: none; /* Removes default Android shadows on dropdowns */
+            appearance: none;
+        }
+		
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
@@ -250,10 +255,23 @@
         }
 
         /* --- LIBRARY TAB STYLES --- */
-        .library-header { width: 90%; max-width: 1000px; margin-top: 1rem; }
+       .library-header { 
+            width: 95%; 
+            margin: 1rem auto 0 auto; /* Centers the header container */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
         .search-bar {
-            width: 100%; padding: 15px; background: var(--surface); border: 1px solid var(--border);
-            color: white; border-radius: 8px; font-size: 1rem; margin-bottom: 10px;
+            width: 100%; 
+            padding: 15px; 
+            background: var(--surface); 
+            border: 1px solid var(--border);
+            color: white; 
+            border-radius: 8px; 
+            font-size: 1rem;
+            outline: none; /* Prevents blue glow on tap */
         }
         .filter-scroll {
             display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none;
@@ -294,7 +312,17 @@
             background: var(--surface); width: 90%; max-width: 800px; border-radius: 12px;
             padding: 25px; margin-top: 20px; border: 1px solid var(--border);
         }
-        .ab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .ab-grid { 
+            display: grid; 
+            grid-template-columns: 1fr; /* Changes to single column for mobile */
+            gap: 15px; 
+            margin-bottom: 20px; 
+        }
+
+        /* If you ever view this on a tablet or PC, this will put them back to 2 columns */
+        @media (min-width: 600px) {
+            .ab-grid { grid-template-columns: 1fr 1fr; }
+        }
         .ab-group { display: flex; flex-direction: column; gap: 8px; }
         .ab-label { color: #888; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
         .ab-result-card {
@@ -1545,4 +1573,5 @@
 </body>
 
 </html>
+
 
