@@ -364,20 +364,91 @@
             display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px; width: 90%; max-width: 1000px; margin-top: 20px; padding-bottom: 50px;
         }
+		/* --- SHARPER TUTORIAL CARDS --- */
         .tut-card {
-            background: var(--surface); padding: 20px; border-radius: 12px; border: 1px solid var(--border);
+            background: linear-gradient(145deg, var(--surface), #14161d);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
-        .tut-title { font-size: 1.2rem; color: var(--accent); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        .tut-visual { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+
+        .tut-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 10px rgba(247, 198, 0, 0.1);
+        }
+
+        .tut-title { 
+            font-size: 1.1rem; 
+            color: var(--accent); 
+            margin-bottom: 18px; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
         
-        .primer-row { display: flex; align-items: center; gap: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; }
-        .p-blob { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #555; flex-shrink: 0; }
+        .tut-title::before {
+            content: "";
+            width: 4px;
+            height: 18px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .tut-visual { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        
+        .primer-row { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            padding: 12px; 
+            background: rgba(255,255,255,0.03); 
+            border-radius: 10px; 
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.2s;
+        }
+        
+        .primer-row:hover { background: rgba(255,255,255,0.07); }
+
+        .p-blob { 
+            width: 44px; 
+            height: 44px; 
+            border-radius: 10px; 
+            border: 2px solid rgba(255,255,255,0.1); 
+            flex-shrink: 0; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
         .p-arrow { color: #666; font-size: 1.2rem; }
         .p-result { flex: 1; font-size: 0.9rem; color: #ccc; }
         .p-tag { font-weight: bold; color: white; display: block; margin-bottom: 2px; }
 
-        .layer-stack { display: flex; flex-direction: column-reverse; width: 100%; gap: 3px; border: 2px solid #444; padding: 5px; border-radius: 4px; background: #111; }
-        .layer { padding: 8px; text-align: center; color: black; font-weight: bold; font-size: 0.8rem; border-radius: 3px; }
+        .layer-stack { 
+            display: flex; 
+            flex-direction: column-reverse; 
+            width: 100%; 
+            gap: 4px; 
+            border: 1px solid var(--border); 
+            padding: 8px; 
+            border-radius: 10px; 
+            background: #090a0d; 
+        }
+
+        .layer { 
+            padding: 10px; 
+            text-align: center; 
+            color: #fff; 
+            font-weight: 600; 
+            font-size: 0.75rem; 
+            border-radius: 6px; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
 
         .toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
@@ -441,6 +512,7 @@
         <div class="tab" onclick="switchTab('airbrush', this)">Airbrush Config</div>
         <div class="tab" onclick="switchTab('library', this)">Library</div>
         <div class="tab" onclick="switchTab('guide', this)">Tutorials</div>
+		<div class="tab" onclick="switchTab('scribing', this)">Scribing Master</div>
     </div>
 
     <!-- === CREATE TAB === -->
@@ -733,7 +805,60 @@
             </div>
         </div>
     </div>
-
+	<div id="scribing" class="view-section">
+	        <div class="airbrush-panel">
+	            <h3 style="margin-top:0; color:var(--accent);">Chisel & Detail Calculator</h3>
+	            <p style="color:#888; font-size:0.9rem; margin-bottom:15px;">Scale-accurate recommendations for DSPIAE & STEDI chisels.</p>
+	            
+	            <div class="ab-grid">
+	                <div class="ab-group">
+	                    <label class="ab-label">Kit Scale</label>
+	                    <select id="scribeScale" onchange="calcScribing()">
+	                        <option value="hg">High Grade (1/144)</option>
+	                        <option value="mg">Master Grade (1/100)</option>
+	                        <option value="pg" selected>Perfect Grade (1/60)</option>
+	                        <option value="mega">Mega Size (1/48)</option>
+	                    </select>
+	                </div>
+	                <div class="ab-group">
+	                    <label class="ab-label">Target Area</label>
+	                    <select id="scribeArea" onchange="calcScribing()">
+	                        <option value="main">Main Panel Lines</option>
+	                        <option value="sub">Sub-Detail / Trim</option>
+	                        <option value="notch">Detail Notches / Steps</option>
+	                        <option value="frame">Inner Frame Details</option>
+	                    </select>
+	                </div>
+	            </div>
+	
+	            <div class="ab-result-card" style="border-left-color: var(--accent);">
+	                <div class="ab-stat"><span>Recommended Size</span><span class="ab-val" id="resScribeSize">0.2 mm</span></div>
+	                <div class="ab-stat"><span>Tool Pairing</span><span class="ab-val" id="resTool">STEDI / BMC Chisel</span></div>
+	                <div class="ab-note" id="resScribeNote">Perfect Grades have massive surface area. Use 0.2mm for main lines to ensure they don't look "thin" against the scale.</div>
+	            </div>
+	
+	            <h3 style="margin-top:30px; color:var(--accent);">Pattern Inspiration</h3>
+	            <div class="tutorial-grid" style="width:100%; grid-template-columns: 1fr 1fr;">
+	                <div class="tut-card">
+	                    <div style="font-weight:bold; margin-bottom:10px;">The "L-Shaped" Break</div>
+	                    <div style="height:60px; border:1px dashed #555; position:relative; overflow:hidden; background:#111; border-radius: 8px;">
+	                        <div style="position:absolute; top:20px; left:10%; right:10%; height:2px; background:var(--accent);"></div>
+	                        <div style="position:absolute; top:20px; left:50%; height:20px; width:2px; background:var(--accent);"></div>
+	                    </div>
+	                    <p style="font-size:0.75rem; color:#888; margin-top:5px;">Breaks up flat armor blocks. Best for shins and shoulders.</p>
+	                </div>
+	                <div class="tut-card">
+	                    <div style="font-weight:bold; margin-bottom:10px;">The "Triple Step"</div>
+	                    <div style="height:60px; border:1px dashed #555; position:relative; overflow:hidden; background:#111; border-radius: 8px;">
+	                        <div style="position:absolute; top:15px; left:20%; width:10px; height:2px; background:var(--accent);"></div>
+	                        <div style="position:absolute; top:30px; left:40%; width:10px; height:2px; background:var(--accent);"></div>
+	                        <div style="position:absolute; top:45px; left:60%; width:10px; height:2px; background:var(--accent);"></div>
+	                    </div>
+	                    <p style="font-size:0.75rem; color:#888; margin-top:5px;">Classic Katoki-style detail. Use a wider chisel for the notches.</p>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
     <!-- Match Analysis Modal -->
     <div id="matchModal" class="modal-overlay" onclick="if(event.target===this) closeModal()">
         <div class="modal-content">
@@ -1522,7 +1647,25 @@
             else if (tech === 'candy') { psi = "15 - 18 PSI"; if (paint !== 'arkom') ratio = "1 : 3.0"; note += " Clear colors must be built up slowly in many thin layers over Silver/Gold."; }
             document.getElementById('resPSI').innerText = psi; document.getElementById('resRatio').innerText = ratio; document.getElementById('resThinner').innerText = thinner; document.getElementById('resNote').innerText = note;
         }
+		function calcScribing() {
+            const scale = document.getElementById('scribeScale').value;
+            const area = document.getElementById('scribeArea').value;
+            
+            const data = {
+                hg: { main: "0.1mm", sub: "0.15mm", notch: "0.4mm", note: "Keep it subtle. Oversized lines make HGs look like toys." },
+                mg: { main: "0.15mm", sub: "0.2mm", notch: "0.6mm", note: "The industry standard. Mix 0.15 and 0.3 for visual depth." },
+                pg: { main: "0.2mm", sub: "0.4mm", notch: "1.0mm", note: "You have space! Use wide 1.0mm steps for that mechanical heavy-metal feel." },
+                mega: { main: "0.3mm", sub: "0.5mm", notch: "1.5mm", note: "Bold lines required to prevent them from 'disappearing' on such a large kit." }
+            };
 
+            const size = data[scale][area] || "0.2mm";
+            const note = data[scale].note;
+            const tool = (parseFloat(size) < 0.2) ? "DSPIAE Tungsten Steel" : "STEDI / BMC Chisel";
+
+            document.getElementById('resScribeSize').innerText = size;
+            document.getElementById('resTool').innerText = tool;
+            document.getElementById('resScribeNote').innerText = note;
+        }
         function switchTab(tabId, el) {
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1532,6 +1675,7 @@
             if(tabId === 'hangar') renderHangar();
             if(tabId === 'bench') runMatcher(document.getElementById('matchPicker').value);
             if(tabId === 'mixer') renderPigments();
+			if(tabId === 'scribing') calcScribing();
         }
 
         function generate() {
@@ -1765,6 +1909,7 @@
 </body>
 
 </html>
+
 
 
 
