@@ -24,10 +24,12 @@
             --success: #00e676;
         }
 		* {
-            box-sizing: border-box; /* This keeps the search bar from overflowing */
-            -webkit-appearance: none; /* Removes default Android shadows on dropdowns */
-            appearance: none;
-        }
+		    box-sizing: border-box !important;
+		    -webkit-appearance: none;
+		    appearance: none;
+		    margin: 0;
+		    padding: 0;
+		}
 		
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -152,9 +154,29 @@
 
         .control-row { display: flex; gap: 10px; }
         input[type="color"] { flex: 1; height: 45px; border: none; background: none; cursor: pointer; }
+		/* This covers both the dropdown and the buttons */
         select, .action-btn {
-            padding: 12px; border-radius: 6px; border: 1px solid #444;
-            background: #252830; color: white; font-size: 1rem; flex: 2; cursor: pointer;
+            width: 100% !important; /* Forces alignment */
+            padding: 12px 15px; 
+            border-radius: 6px; 
+            border: 1px solid #444;
+            background-color: #252830; 
+            color: white; 
+            font-size: 1rem; 
+            flex: 2; 
+            cursor: pointer;
+            display: block;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        /* This specifically adds the arrow icon back to the dropdowns */
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 15px center !important;
+            background-size: 18px !important;
+            padding-right: 40px !important; /* Makes room for the arrow */
         }
         .gen-btn { background: var(--accent); color: black; font-weight: bold; border: none; cursor: pointer; }
         .gen-btn:hover { opacity: 0.9; }
@@ -262,17 +284,18 @@
             flex-direction: column;
             gap: 10px;
         }
-
-        .search-bar {
-            width: 100%; 
-            padding: 15px; 
-            background: var(--surface); 
-            border: 1px solid var(--border);
-            color: white; 
-            border-radius: 8px; 
-            font-size: 1rem;
-            outline: none; /* Prevents blue glow on tap */
-        }
+		
+		.search-bar, select {
+		    width: 100% !important; /* Forces them to fill the 95% container */
+		    display: block !important;
+		    padding: 15px !important;
+		    background: var(--surface) !important;
+		    border: 1px solid var(--border) !important;
+		    color: white !important;
+		    border-radius: 10px !important;
+		    font-size: 1rem !important;
+		    margin: 10px 0 !important;
+		}
         .filter-scroll {
             display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none;
         }
@@ -308,10 +331,11 @@
         .btn-match { background: var(--accent); color: black; }
 
         /* --- AIRBRUSH TAB STYLES --- */
-        .airbrush-panel {
-            background: var(--surface); width: 90%; max-width: 800px; border-radius: 12px;
-            padding: 25px; margin-top: 20px; border: 1px solid var(--border);
-        }
+		.airbrush-panel {
+		    width: 95%; /* Matches the rest of the app */
+		    max-width: 800px;
+		    padding: 20px;
+		}
         .ab-grid { 
             display: grid; 
             grid-template-columns: 1fr; /* Changes to single column for mobile */
@@ -323,7 +347,9 @@
         @media (min-width: 600px) {
             .ab-grid { grid-template-columns: 1fr 1fr; }
         }
-        .ab-group { display: flex; flex-direction: column; gap: 8px; }
+		    .ab-group {
+		    width: 100%; /* Ensures the labels and dropdowns stack perfectly */
+		}
         .ab-label { color: #888; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
         .ab-result-card {
             background: #111; padding: 20px; border-radius: 8px; border-left: 5px solid var(--success);
@@ -1573,5 +1599,6 @@
 </body>
 
 </html>
+
 
 
