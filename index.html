@@ -528,11 +528,14 @@
     </div>
 
     <!-- === PAINT LAB TAB === -->
-    <div id="paintlab" class="view-section">
-        <div class="create-container">
-            <div class="generator-box" style="max-width:300px;">
-                <h3 style="margin:0 0 10px 0;">Paint Lab</h3>
-                <label class="file-upload-btn">📂 Upload Own Gunpla Image<input type="file" id="imageLoader" accept="image/*" style="display:none;" onchange="handleImageUpload(event)"></label>
+			<div class="generator-box" style="max-width:300px;">
+			    <h3 style="margin:0 0 10px 0;">Paint Lab</h3>
+			    
+			    <button id="samplerBtn" class="action-btn" style="background:#444; margin-bottom:10px;" onclick="toggleSampler()">
+			        🔍 EYEDROPPER: OFF
+			    </button>
+			
+			    <label class="file-upload-btn">📂 Upload Own Gunpla Image<input type="file" id="imageLoader" accept="image/*" style="display:none;" onchange="handleImageUpload(event)"></label>
                 <label style="color:#888;">ACTIVE COLOR</label>
                 <div class="color-wrapper" id="colorTrigger">
                     <div id="colorDisplay" style="background:#E61E25;">PICK COLOR</div>
@@ -1389,9 +1392,29 @@
                     ctx.drawImage(img, 0, 0, w, h);
                     document.getElementById('paintSVG').style.display = 'none'; canvas.style.display = 'block'; uploadedImage = true;
                     document.getElementById('canvasLabel').innerText = "Interactive Paint Canvas (Magic Fill Active)";
-                    canvas.onclick = function(evt) {
-                        const rect = canvas.getBoundingClientRect(); const x = Math.floor(evt.clientX - rect.left); const y = Math.floor(evt.clientY - rect.top);
-                        const fillColor = hexToRgb(document.getElementById('paintColorPicker').value); floodFill(canvas, x, y, fillColor);
+					canvas.onclick = function(evt) {
+                        const rect = canvas.getBoundingClientRect(); 
+                        const x = Math.floor(evt.clientX - rect.left); 
+                        const y = Math.floor(evt.clientY - rect.top);
+
+                        if (isSampling) {
+                            // --- MODE A: EYEDROPPER ---
+                            const ctx = canvas.getContext('2d');
+                            const pixel = ctx.getImageData(x, y, 1, 1).data;
+                            const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+                            
+                            // Set the color and find the paint bottle match!
+                            document.getElementById('paintColorPicker').value = hex;
+                            updateColorDisplay(hex);
+                            runMatcher(hex); 
+                            
+                            toggleSampler(); // Auto-off after picking
+                            showToast("Sampled: " + hex);
+                        } else {
+                            // --- MODE B: PAINTING (Flood Fill) ---
+                            const fillColor = hexToRgb(document.getElementById('paintColorPicker').value); 
+                            floodFill(canvas, x, y, fillColor);
+                        }
                     };
                 }
                 img.src = event.target.result;
@@ -1586,7 +1609,52 @@
         renderLibrary();
         renderHangar();
         renderPigments();
-
+		let isSampling = false;
+		
+		function toggleSampler() {
+		    isSampling = !isSampling;
+		    const btn = document.getElementById('samplerBtn');
+		    btn.innerText = isSampling ? "🎯 TAP IMAGE TO PICK" : "🔍 EYEDROPPER: OFF";
+		    btn.style.background = isSampling ? "var(--accent)" : "#444";
+		    btn.style.color = isSampling ? "black" : "white";
+		}
+		
+		// Update your canvas.onclick inside handleImageUpload to use this logic
+		function setupEyedropper(canvas) {
+		    canvas.addEventListener('click', function(evt) {
+		        const rect = canvas.getBoundingClientRect();
+		        const x = Math.floor(evt.clientX - rect.left);
+		        const y = Math.floor(evt.clientY - rect.top);
+		        const ctx = canvas.getContext('2d');
+		
+		        if (isSampling) {
+		            // Get pixel data
+		            const pixel = ctx.getImageData(x, y, 1, 1).data;
+		            const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+		            
+		            // Set the picked color as active
+		            document.getElementById('paintColorPicker').value = hex;
+		            updateColorDisplay(hex);
+		            
+		            // Automatically switch back to paint mode
+		            toggleSampler();
+		            showToast("Color Sampled: " + hex);
+		            
+		            // OPTIONAL: Run the matcher immediately
+		            runMatcher(hex); 
+		        } else {
+		            // Your existing floodFill logic
+		            const fillColor = hexToRgb(document.getElementById('paintColorPicker').value);
+		            floodFill(canvas, x, y, fillColor);
+		        }
+		    });
+		}
+		
+		// Helper function needed for the sampler
+		function rgbToHex(r, g, b) {
+		    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+		}
+		
     </script>
 
 	<script>
@@ -1599,6 +1667,7 @@
 </body>
 
 </html>
+
 
 
 
