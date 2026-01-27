@@ -498,10 +498,14 @@
         .modal-acc { font-size: 0.8rem; color: #888; }
 		
 		/* --- PHOTOGRAPHY MASTER STYLES --- */
-        .photo-grid {
+		.photo-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px; width: 95%; max-width: 1200px; margin-top: 20px; padding-bottom: 50px;
+            gap: 20px; 
+            width: 95%; 
+            max-width: 1200px; 
+            margin-top: 20px; 
+            padding-bottom: 100px; /* <--- Changed from 50px to 100px */
         }
 
         .viewfinder {
@@ -930,20 +934,29 @@
 		                <p id="resPhotoNote" style="font-size:0.8rem; color:#888; margin-top:10px;">Keep aperture closed to maintain scale.</p>
 		            </div>
 		
-		            <div class="bench-card" style="border-top: 3px solid var(--link);">
+					<div class="bench-card" style="border-top: 3px solid var(--link);">
 		                <h3 style="color:var(--link); margin-top:0;">Digital Darkroom</h3>
 		                <label class="ab-label">Edit Style</label>
 		                <select id="editStyle" onchange="calcEditSettings()">
-		                    <option value="clean">Clean Studio (Pro)</option>
-		                    <option value="gritty">Real Type (Weathered)</option>
-		                    <option value="glow">Psycho-Frame Burst</option>
+		                    <option value="clean_studio">Clean Studio (Exhibition)</option>
+		                    <option value="max_weathering">Max Weathering (Frontline)</option>
+		                    <option value="cinematic_low">Cinematic Bloom (Anime)</option>
+		                    <option value="mechanical_detail">Mechanical Detail (Blueprint)</option>
+		                    <option value="high_key_box">High-Key (Box Art Style)</option>
 		                </select>
-		                <div class="exposure-bar" style="border-color: rgba(77, 166, 255, 0.3);">
-		                    <div class="ab-stat"><span>Contrast</span><span class="iso-val" id="resContrast">+15</span></div>
-		                    <div class="ab-stat"><span>Clarity</span><span class="iso-val" id="resClarity">+10</span></div>
-		                    <div class="ab-stat"><span>Dehaze</span><span class="iso-val" id="resDehaze">+5</span></div>
+		                
+		                <div class="exposure-bar" style="border-color: rgba(77, 166, 255, 0.3); display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+		                    <div class="ab-stat"><span>Contrast</span><span class="iso-val" id="resContrast">+10</span></div>
+		                    <div class="ab-stat"><span>Highlights</span><span class="iso-val" id="resHighlights">-15</span></div>
+		                    <div class="ab-stat"><span>Clarity</span><span class="iso-val" id="resClarity">+5</span></div>
+		                    <div class="ab-stat"><span>Shadows</span><span class="iso-val" id="resShadows">+10</span></div>
+		                    <div class="ab-stat"><span>Dehaze</span><span class="iso-val" id="resDehaze">0</span></div>
+		                    <div class="ab-stat"><span>Saturation</span><span class="iso-val" id="resSaturation">0</span></div>
+		                    <div class="ab-stat" style="grid-column: span 2; border-top: 1px solid #444; padding-top: 8px; margin-top: 5px;">
+		                        <span>White Balance</span><span class="iso-val" id="resWB">5000K (Neutral)</span>
+		                    </div>
 		                </div>
-		                <p id="resEditNote" style="font-size:0.8rem; color:#888; margin-top:10px;">Focus on a clean white balance.</p>
+		                <p id="resEditNote" style="font-size:0.8rem; color:#888; margin-top:10px;">Focus on color accuracy and natural finishes.</p>
 		            </div>
 		        </div>
 		    </div>
@@ -2008,22 +2021,50 @@
             }
         }
 
-        function calcEditSettings() {
+			function calcEditSettings() {
             const style = document.getElementById('editStyle').value;
-            const contrast = document.getElementById('resContrast');
-            const clarity = document.getElementById('resClarity');
-            const dehaze = document.getElementById('resDehaze');
             const note = document.getElementById('resEditNote');
             
-            if(style === 'clean') { 
-                contrast.innerText = "+15"; clarity.innerText = "+10"; dehaze.innerText = "+5"; 
-                note.innerText = "Clean and professional. Small clarity boost for panel lines."; 
-            } else if (style === 'gritty') { 
-                contrast.innerText = "+25"; clarity.innerText = "+45"; dehaze.innerText = "+20"; 
-                note.innerText = "Brings out weathering, dry-brushing, and mechanical grime."; 
-            } else if (style === 'glow') { 
-                contrast.innerText = "-10"; clarity.innerText = "-15"; dehaze.innerText = "-10"; 
-                note.innerText = "Creates a soft 'bloom' effect around glowing psycho-frame parts."; 
+            const res = {
+                contrast: document.getElementById('resContrast'),
+                clarity: document.getElementById('resClarity'),
+                dehaze: document.getElementById('resDehaze'),
+                highlights: document.getElementById('resHighlights'),
+                shadows: document.getElementById('resShadows'),
+                saturation: document.getElementById('resSaturation'),
+                wb: document.getElementById('resWB')
+            };
+
+            if (style === 'clean_studio') {
+                res.contrast.innerText = "+10"; res.highlights.innerText = "-15";
+                res.clarity.innerText = "+5";   res.shadows.innerText = "+15";
+                res.dehaze.innerText = "0";    res.saturation.innerText = "0";
+                res.wb.innerText = "5000K (Neutral)";
+                note.innerText = "The 'Hobby Japan' standard. Neutral colors and lifted shadows.";
+            } else if (style === 'max_weathering') {
+                res.contrast.innerText = "+35"; res.highlights.innerText = "-5";
+                res.clarity.innerText = "+55";  res.shadows.innerText = "-20";
+                res.dehaze.innerText = "+25";  res.saturation.innerText = "-15";
+                res.wb.innerText = "5600K (Daylight)";
+                note.innerText = "Maximum crunch. High clarity makes every scratch sharp.";
+            } else if (style === 'cinematic_low') {
+                res.contrast.innerText = "+45"; res.highlights.innerText = "+30";
+                res.clarity.innerText = "-15";  res.shadows.innerText = "-35";
+                res.dehaze.innerText = "-12";  res.saturation.innerText = "+18";
+                res.wb.innerText = "6500K (Cool Blue)";
+                note.innerText = "Dramatic anime mood. Negative clarity creates a soft 'glow'.";
+            } else if (style === 'mechanical_detail') {
+                res.contrast.innerText = "+25"; res.highlights.innerText = "-25";
+                res.clarity.innerText = "+40";  res.shadows.innerText = "+40";
+                res.dehaze.innerText = "+15";  res.saturation.innerText = "-8";
+                res.wb.innerText = "5200K (Technical)";
+                note.innerText = "Optimized for detail. Lifted shadows ensure work is visible.";
+            } else if (style === 'high_key_box') {
+                res.contrast.innerText = "+18"; res.highlights.innerText = "+45";
+                res.clarity.innerText = "0";    res.shadows.innerText = "+55";
+                res.dehaze.innerText = "-25";  res.saturation.innerText = "+5";
+                res.wb.innerText = "6000K (Pure White)";
+                note.innerText = "Official promo style. Blown-out highlights create a white void.";
             }
         }
 	
@@ -2073,6 +2114,7 @@
 </body>
 
 </html>
+
 
 
 
