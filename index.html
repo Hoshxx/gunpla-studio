@@ -453,16 +453,20 @@
                     <input type="color" id="baseColor" value="#E8E8E8" onchange="generate()">
                 </div>
                 
-                <label style="color:#888; font-size:0.9rem;">ALGORITHM</label>
-                <select id="algoMode" onchange="generate()">
-                    <option value="complementary">Standard Hero (Main + Contrast)</option>
-                    <option value="triadic">Triadic (Vibrant Custom)</option>
-                    <option value="analogous">Military/Camo Style</option>
-                    <option value="split">Split-Complementary (Balanced)</option>
-                    <option value="monochromatic">Real Type (Shades of One)</option>
-                    <option value="tetradic">Tetradic (Super Robot)</option>
-                    <option value="industrial">Industrial (Mass Production)</option>
-                </select>
+				<label style="color:#888; font-size:0.9rem;">ALGORITHM</label>
+				<select id="algoMode" onchange="generate()">
+				    <option value="complementary">Standard Hero (Main + Contrast)</option>
+				    <option value="triadic">Triadic (Vibrant Custom)</option>
+				    <option value="analogous">Military/Camo Style</option>
+				    <option value="split">Split-Complementary (Balanced)</option>
+				    <option value="monochromatic">Real Type (Shades of One)</option>
+				    <option value="tetradic">Tetradic (Super Robot)</option>
+				    <option value="industrial">Industrial (Mass Production)</option>
+				    <option value="aoki">AOKI (Low-Vis High-Contrast)</option>
+				    <option value="g3_shift">G-3 Tonal (Pro De-Saturation)</option>
+				    <option value="mp_grunt">Mass Production (2-Tone Grunt)</option>
+				    <option value="studio_pro">Studio Pro (blukara7 Style)</option>
+				</select>
 
                 <div style="display:flex; gap:10px;">
                     <button class="action-btn gen-btn" onclick="generate()">GENERATE</button>
@@ -1082,11 +1086,15 @@
             return Math.sqrt(Math.pow(rgb2.r - rgb1.r, 2) + Math.pow(rgb2.g - rgb1.g, 2) + Math.pow(rgb2.b - rgb1.b, 2));
         }
 
-        function getPanelLiner(hex) {
+		function getPanelLiner(hex) {
             const hsl = hexToHSL(hex);
-            if (hsl.l > 70) return { name: "GREY LINER", color: "#888" };
+            // 1. Very dark armor always gets Black
             if (hsl.l < 30) return { name: "BLACK LINER", color: "#000" };
-            if ((hsl.h >= 0 && hsl.h < 70) || (hsl.h > 340)) return { name: "BROWN LINER", color: "#5C4033" };
+            // 2. Pure white or very light grey gets Grey
+            if (hsl.l > 85) return { name: "GREY LINER", color: "#888" };
+            // 3. Warm tones (Red, Yellow, Tan, Brown) get Brown
+            if (hsl.h < 50 || hsl.h > 330) return { name: "BROWN LINER", color: "#5C4033" };
+            // 4. Cool tones (Blue, Green, Grey) get Black for high contrast
             return { name: "BLACK LINER", color: "#000" };
         }
 
@@ -1587,6 +1595,30 @@
                 addStrip(hsl.h, Math.max(0, hsl.s - 40), hsl.l - 10, "LOW VIS MAIN");
                 addStrip(hsl.h, 10, 30, "JOINT / FRAME");
                 addStrip(hsl.h, 5, 80, "MARKING / DETAIL");
+            } else if (mode === 'aoki') {
+                // Designer Low-Vis logic: High contrast via a sharp accent
+                addStrip(hsl.h, hsl.s - 20, hsl.l - 5, "PRIMARY ARMOR");
+                addStrip(hsl.h, hsl.s - 25, hsl.l - 15, "SUB-ARMOR (DARKER)");
+                addStrip(15, 90, 55, "SAFETY ORANGE (SENSORS)"); // The "DANGER" accent
+                addStrip(hsl.h, 5, 20, "TECH-GREY FRAME");
+            } else if (mode === 'g3_shift') {
+                // Pro De-Saturation: Replicates the G-3/Real Experience look
+                addStrip(hsl.h, hsl.s * 0.5, hsl.l - 10, "G-3 PRIMARY");
+                addStrip(hsl.h + 180, 15, 30, "DE-SATURATED CONTRAST");
+                addStrip(45, 20, 70, "WARM WHITE");
+                addStrip(hsl.h, 0, 15, "STEEL FRAME");
+            } else if (mode === 'mp_grunt') {
+                // 2-Tone Mass Production: Subtle shifts for army builders
+                addStrip(hsl.h, hsl.s, hsl.l, "PRIMARY GRUNT");
+                addStrip(hsl.h + 25, hsl.s - 10, hsl.l - 5, "SECONDARY ARMOR");
+                addStrip(hsl.h + 180, 10, 25, "COMMANDER ACCENT");
+                addStrip(hsl.h, 5, 15, "DARK FRAME");
+            } else if (mode === 'studio_pro') {
+                // blukara7 / Modern High-End: Focuses on part separation
+                addStrip(hsl.h, hsl.s, hsl.l, "STUDIO MAIN");
+                addStrip(hsl.h, Math.max(0, hsl.s - 5), Math.max(0, hsl.l - 12), "PANEL VARIATION");
+                addStrip(hsl.h + 160, 95, 50, "SULPHUR GLOW (EYES)");
+                addStrip(0, 0, 29, "PRO FRAME (#4A4A4A)"); // Forced Zeon Grey
             }
 
             currentPalette = palette;
@@ -1733,6 +1765,7 @@
 </body>
 
 </html>
+
 
 
 
