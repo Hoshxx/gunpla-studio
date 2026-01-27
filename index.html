@@ -908,6 +908,7 @@
 		                    <option value="cinematic">3-Point Cinematic (Hero)</option>
 		                    <option value="dramatic">High Contrast (Side Lit)</option>
 		                    <option value="uv">Psycho-Frame Glow (UV Sync)</option>
+							<option value="lightbox">Softbox / Lightbox (Uniform)</option>
 		                </select>
 		                <div class="light-sim-container"><div class="model-shadow" id="modelShadow"></div></div>
 		                <p id="lightNote" style="font-size:0.8rem; color:#888;">Standard Hero setup. Use a rim light behind the kit.</p>
@@ -1954,31 +1955,32 @@
         }
 	// --- PHOTOGRAPHY MASTER LOGIC ---
 		function updateLightSim() {
-		    const setup = document.getElementById('lightSetup').value;
-		    const shadow = document.getElementById('modelShadow');
-		    const note = document.getElementById('lightNote');
-		    
-		    // Reset any previous styles
-		    shadow.style.filter = "none";
-		    shadow.style.background = "#333";
-		
-		    if(setup === 'cinematic') {
-		        // High-key lighting with a soft rim shadow
-		        shadow.style.boxShadow = "15px 5px 25px rgba(0,0,0,0.9), -2px -2px 10px rgba(255,255,255,0.2)";
-		        note.innerText = "Key light at 45°. Use a rim light behind the kit for separation.";
-		    } else if (setup === 'dramatic') {
-		        // Harsh side shadow to emphasize panel lines
-		        shadow.style.boxShadow = "60px 0 40px rgba(0,0,0,1)";
-		        shadow.style.background = "#222"; // Darken the model itself
-		        note.innerText = "Side lighting only. Accentuates scribing and panel line depth.";
-		    } else if (setup === 'uv') {
-		        // Glowing effect for psycho-frames
-		        shadow.style.boxShadow = "0 0 30px #ff0055, 0 0 10px #ff0055";
-		        shadow.style.background = "#444";
-		        shadow.style.filter = "brightness(1.5)";
-		        note.innerText = "Long exposure. Wave a UV torch over clear parts during the shot.";
-		    }
-		}
+            const setup = document.getElementById('lightSetup').value;
+            const shadow = document.getElementById('modelShadow');
+            const note = document.getElementById('lightNote');
+            
+            shadow.style.filter = "none";
+            shadow.style.background = "#333";
+
+            if(setup === 'cinematic') {
+                shadow.style.boxShadow = "15px 5px 25px rgba(0,0,0,0.9), -2px -2px 10px rgba(255,255,255,0.2)";
+                note.innerText = "Key light at 45°. Use a rim light behind the kit for separation.";
+            } else if (setup === 'dramatic') {
+                shadow.style.boxShadow = "60px 0 40px rgba(0,0,0,1)";
+                shadow.style.background = "#222"; 
+                note.innerText = "Side lighting only. Accentuates scribing and panel line depth.";
+            } else if (setup === 'uv') {
+                shadow.style.boxShadow = "0 0 30px #ff0055, 0 0 10px #ff0055";
+                shadow.style.background = "#444";
+                shadow.style.filter = "brightness(1.5)";
+                note.innerText = "Long exposure. Wave a UV torch over clear parts during the shot.";
+            } else if (setup === 'lightbox') {
+                // Lightbox: Soft glow from all sides, almost no visible shadow
+                shadow.style.boxShadow = "0 0 15px rgba(255,255,255,0.3)";
+                shadow.style.background = "#555";
+                note.innerText = "Even, soft light. Perfect for 'Clean Studio' edits. Watch for reflections on gloss parts.";
+            }
+        }
 
         function calcCameraSettings() {
             const shot = document.getElementById('shotType').value;
@@ -2063,6 +2065,7 @@
 </body>
 
 </html>
+
 
 
 
