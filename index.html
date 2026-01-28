@@ -149,6 +149,7 @@
             max-width: 500px;
             position: relative;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+			margin-bottom: 200px;
         }
 
         /* SVG & Canvas Styles */
@@ -167,6 +168,7 @@
 		    cursor: crosshair;
 		    display: none;
 		    border-radius: 8px; /* Optional: keeps it looking clean */
+			transition: transform 0.2s ease-out; /* Smooths out the zoom */
 		}
         
         .svg-outline, .svg-detail { pointer-events: none; }
@@ -696,7 +698,9 @@
 		            
 		            <label style="color:#888; margin-top:15px; display:block;">BRUSH SIZE: <span id="brushSizeDisplay">15</span>px</label>
 		            <input type="range" id="brushSize" min="5" max="50" value="15" style="width:100%; cursor:pointer;" oninput="document.getElementById('brushSizeDisplay').innerText = this.value">
-		
+					<label style="color:#888; margin-top:15px; display:block;">VIEW ZOOM: <span id="zoomVal">100</span>%</label>
+					<input type="range" id="zoomSlider" min="100" max="400" value="100" step="10" 
+					       oninput="adjustZoom(this.value)" style="width:100%; cursor:pointer;">					
 		            <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
 		                <div style="display:flex; gap:10px;">
 		                    <button class="action-btn" style="background:#444;" onclick="wipePaint()">WIPE</button>
@@ -777,13 +781,13 @@
                 </div>
                 <div class="ab-group">
                     <label class="ab-label">Technique</label>
-                    <select id="abTech" onchange="calcAirbrush()">
-                        <option value="base">Base Coating (Solid)</option>
-                        <option value="preshade">Preshading (Shadows)</option>
-                        <option value="metallic">Metallic / Candy Base</option>
-                        <option value="gloss">Gloss Topcoat</option>
-                        <option value="flat">Flat/Matte Topcoat</option>
-                    </select>
+				<select id="abTech" onchange="calcAirbrush()">
+				    <option value="base">Base Coating (Solid)</option>
+				    <option value="preshade">Preshading (Shadows)</option>
+				    <option value="metallic">Metallic / Sparkle Base</option>
+				    <option value="candy">Candy / Clear Coating</option> <option value="gloss">Gloss Topcoat</option>
+				    <option value="flat">Flat/Matte Topcoat</option>
+				</select>
                 </div>
                 <div class="ab-group">
                     <label class="ab-label">Paint Type</label>
@@ -1790,50 +1794,109 @@
 			    reader.readAsDataURL(event.target.files[0]);
 			}
 
-        // Logic for interacting with the uploaded photo
-        document.getElementById('paintCanvas').onclick = function(e) {
-            if (!uploadedImage) return;
-            
-            const rect = this.getBoundingClientRect();
-            const x = (e.clientX - rect.left) * (this.width / rect.width);
-            const y = (e.clientY - rect.top) * (this.height / rect.height);
-            const ctx = this.getContext('2d');
-            
-            if (isSampling) {
-                // EYEDROPPER MODE
-                const pixel = ctx.getImageData(x, y, 1, 1).data;
-                const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-                updateColorDisplay(hex);
-                document.getElementById('paintColorPicker').value = hex;
-                toggleSampler(); // Turn off sampler after pick
-                showToast("Color Sampled!");
-            } else {
-				// PAINT MODE (Draw a soft circle)
-				const color = document.getElementById('paintColorPicker').value;
-				const size = document.getElementById('brushSize').value; // <--- Get size from slider
-				ctx.fillStyle = color;
-				ctx.globalAlpha = 0.5;
-				ctx.beginPath();
-				ctx.arc(x, y, size, 0, Math.PI * 2); // <--- Use the slider value here
-				ctx.fill();
-                ctx.globalAlpha = 1.0;
-            }
-        };
+			// --- PHOTO INTERACTION ENGINE ---
+			document.getElementById('paintCanvas').onclick = function(e) {
+			    if (!uploadedImage) return;
+			    
+			    const rect = this.getBoundingClientRect();
+			    const x = (e.clientX - rect.left) * (this.width / rect.width);
+			    const y = (e.clientY - rect.top) * (this.height / rect.height);
+			    const ctx = this.getContext('2d');
+			    
+			    if (isSampling) {
+			        const pixel = ctx.getImageData(x, y, 1, 1).data;
+			        const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+			        updateColorDisplay(hex);
+			        document.getElementById('paintColorPicker').value = hex;
+			        toggleSampler(); 
+			        showToast("Color Sampled!");
+			    } else {
+			        // --- PRO PAINT ENGINE (Multiply Mode) ---
+			        const color = document.getElementById('paintColorPicker').value;
+			        const size = document.getElementById('brushSize').value;
+			        
+			        ctx.save(); 
+			        ctx.globalCompositeOperation = 'multiply'; // The secret sauce!
+			        ctx.fillStyle = color;
+			        ctx.globalAlpha = 0.7; 
+			        
+			        ctx.beginPath();
+			        ctx.arc(x, y, size, 0, Math.PI * 2);
+			        ctx.fill();
+			        ctx.restore(); 
+			    }
+			};
+			
+			// --- ZOOM CONTROLLER (Moved to Global Scope) ---
+			function adjustZoom(val) {
+			    const canvas = document.getElementById('paintCanvas');
+			    document.getElementById('zoomVal').innerText = val;
+			    // Visually scales the canvas so you can hit those tiny vents/panel lines
+			    canvas.style.transform = `scale(${val/100})`;
+			    canvas.style.transformOrigin = "top center"; 
+			}
+			
         // --- CORE FUNCTIONS ---
-        function calcAirbrush() {
-            const model = document.getElementById('abModel').value; const tech = document.getElementById('abTech').value; const paint = document.getElementById('abPaint').value;
-            let psi = "18-20 PSI"; let ratio = "1 : 2.0"; let thinner = "Generic Thinner"; let note = "";
-            if (paint === 'arkom') { thinner = "None (Ready to Spray)"; ratio = "Direct from Bottle"; note = "Arkom is pre-thinned. Shake vigorously."; psi = "18-20 PSI"; } 
-            else if (paint === 'lacquer') { thinner = "Mr. Leveling Thinner (MLT)"; ratio = "1 : 2.0 (Std) to 1 : 3.0 (Thin)"; note = "Lacquers love MLT. It retards drying for a smooth finish."; } 
-            else if (paint === 'acrylic_t') { thinner = "X-20A or Lacquer Thinner"; ratio = "1 : 1.5"; note = "Tamiya Acrylics can be thinned with Lacquer thinner for harder coats."; } 
-            else if (paint === 'acrylic_v') { thinner = "Flow Improver + Water"; ratio = "1 : 0.5 (Just a few drops)"; note = "Water-based acrylics tip-dry fast. Keep PSI lower."; } 
-            else { thinner = "Enamel Thinner / Zippo Fluid"; ratio = "1 : 1.5"; note = "Enamels are for washes or reverse washing. Don't flood the plastic!"; }
-            if (tech === 'preshade') { psi = "10 - 12 PSI"; if (paint !== 'arkom') ratio = (paint === 'lacquer') ? "1 : 3.5" : "1 : 2.0"; note += " For preshading, go THIN and get CLOSE (1cm away)."; } 
-            else if (tech === 'base') { if (paint !== 'arkom') psi = (model === 'nasedal') ? "20 - 25 PSI" : "18 - 20 PSI"; note += " Standard base coat. Aim for wet coats, not dusty ones."; } 
-            else if (tech === 'metallic') { psi = "20 - 25 PSI"; if (paint !== 'arkom') ratio = "1 : 2.0"; note += " Metallics need higher pressure to atomize the flakes. Black base required."; } 
-            else if (tech === 'candy') { psi = "15 - 18 PSI"; if (paint !== 'arkom') ratio = "1 : 3.0"; note += " Clear colors must be built up slowly in many thin layers over Silver/Gold."; }
-            document.getElementById('resPSI').innerText = psi; document.getElementById('resRatio').innerText = ratio; document.getElementById('resThinner').innerText = thinner; document.getElementById('resNote').innerText = note;
-        }
+			function calcAirbrush() {
+			    const model = document.getElementById('abModel').value; 
+			    const tech = document.getElementById('abTech').value; 
+			    const paint = document.getElementById('abPaint').value;
+			
+			    let psi = "18-20 PSI"; 
+			    let ratio = "1 : 2.0"; 
+			    let thinner = "Mr. Leveling Thinner (MLT)"; 
+			    let note = "";
+			
+			    // 1. Establish Base Paint Rules
+			    if (paint === 'lacquer') {
+			        thinner = "Mr. Leveling Thinner (MLT)";
+			        ratio = "1 : 2.0";
+			    } else if (paint === 'arkom') {
+			        thinner = "None (Pre-thinned)";
+			        ratio = "Straight from bottle";
+			        psi = "15-18 PSI";
+			    } else if (paint === 'acrylic_t') {
+			        thinner = "Tamiya X-20A / IPA";
+			        ratio = "1 : 1.5";
+			    } else if (paint === 'acrylic_v') {
+			        thinner = "Vallejo Thinner + Flow Improver";
+			        ratio = "1 : 1.0";
+			        psi = "12-15 PSI";
+			    } else if (paint === 'enamel') {
+			        thinner = "Enamel Thinner / Zippo Fluid";
+			        ratio = "1 : 3.0";
+			    }
+			
+			    // 2. Apply Technique Overrides
+			    if (tech === 'preshade') { 
+			        psi = "10 - 12 PSI"; 
+			        if (paint !== 'arkom') ratio = (paint === 'lacquer') ? "1 : 3.5" : "1 : 2.0"; 
+			        note = "For preshading, go THIN and get CLOSE (1cm away). Control is everything."; 
+			    } 
+			    else if (tech === 'base') { 
+			        if (paint !== 'arkom') psi = (model === 'nasedal') ? "20 - 25 PSI" : "18 - 20 PSI"; 
+			        note = "Standard base coat. Aim for wet coats, not dusty ones."; 
+			    } 
+			    else if (tech === 'metallic') { 
+			        psi = "22 - 25 PSI"; 
+			        if (paint !== 'arkom') ratio = "1 : 1.5"; 
+			        note = "Higher pressure helps atomize heavy metal flakes. Use a Gloss Black base."; 
+			    } 
+			    else if (tech === 'candy') { 
+			        psi = "12 - 15 PSI"; 
+			        if (paint !== 'arkom') ratio = "1 : 3.0"; 
+			        note = "Build clear layers slowly. If it pools, you are spraying too heavy."; 
+			    }
+			    else if (tech === 'gloss' || tech === 'flat') {
+			        note = "Apply in 2-3 mist passes before one final 'wet' coat for a smooth finish.";
+			    }
+			
+			    // 3. Update the UI
+			    document.getElementById('resPSI').innerText = psi; 
+			    document.getElementById('resRatio').innerText = ratio; 
+			    document.getElementById('resThinner').innerText = thinner; 
+			    document.getElementById('resNote').innerText = note;
+			}
 		function calcScribing() {
             const scale = document.getElementById('scribeScale').value;
             const area = document.getElementById('scribeArea').value;
@@ -2235,6 +2298,7 @@
 </body>
 
 </html>
+
 
 
 
