@@ -10,6 +10,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Gunpla Studio">
+	<meta name="apple-mobile-web-app-title" content="Gunpla Studio">
+    <meta name="color-scheme" content="dark">  <-- NEW LINE
+    <meta name="theme-color" content="#0f1014">
     <meta name="theme-color" content="#0f1014">
 
     <style>
@@ -25,7 +28,9 @@
             --success: #00e676;
         }
 		img, svg, video, canvas, .pigment-btn, .h-swatch, .c-strip, .r-swatch, .mix-bowl {
-            color-scheme: only light; 
+            color-scheme: only light;
+            forced-color-adjust: none; /* FORCE color accuracy */
+            isolation: isolate; /* Protects from background blending */
         }
 		* {
 		    box-sizing: border-box !important;
@@ -2244,6 +2249,7 @@
 </body>
 
 </html>
+
 
 
 
