@@ -188,7 +188,9 @@
             font-size: 1rem; 
             flex: 2; 
             cursor: pointer;
-            display: block;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
             -webkit-appearance: none;
             appearance: none;
         }
@@ -623,8 +625,9 @@
             <div class="generator-box">
                 <h3 style="margin:0 0 10px 0;">Palette Config</h3>
                 <label style="color:#888; font-size:0.9rem;">BASE COLOR (Main Armor)</label>
-                <div class="control-row">
-                    <input type="color" id="baseColor" value="#E8E8E8" onchange="generate()">
+                <div class="color-wrapper" style="margin-bottom:15px;">
+                    <div id="baseColorDisplay" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:black; font-weight:bold;">PICK COLOR</div>
+                    <input type="color" id="baseColor" value="#E8E8E8" style="opacity:0; position:absolute; top:0; left:0; width:100%; height:100%;" oninput="updateBaseDisplay(this.value); generate()">
                 </div>
                 
                 <label style="color:#888; font-size:0.9rem;">ALGORITHM</label>
@@ -643,7 +646,7 @@
                 </select>
 
                 <div style="display:flex; gap:10px;">
-                    <button class="action-btn gen-btn" onclick="generate()">GENERATE</button>
+                    <div class="action-btn gen-btn" onclick="generate()">GENERATE</div>
                     <button class="action-btn" style="background:#444;" onclick="saveToHangar()">SAVE SCHEME</button>
                 </div>
                 <div id="genOutput" class="gen-results"></div>
@@ -681,7 +684,7 @@
                 <h3 style="margin-top:0; color:white; font-size:1rem;">Reverse Recipe Generator</h3>
                 <div style="display:flex; gap:10px;">
                     <input type="text" id="recipeSearchInput" placeholder="#FF0000 or Red" class="search-bar" style="margin:0 !important;">
-                    <button class="action-btn" style="flex:1; background:var(--accent); color:black;" onclick="generateRecipeFromInput()">GENERATE</button>
+                    <div class="action-btn gen-btn" style="flex:1;" onclick="generateRecipeFromInput()">GENERATE</div>
                 </div>
             </div>
     
@@ -2189,7 +2192,122 @@
                 }
             }
         });
+            /* --- V2.1 FIX: SVG ENGINE OVERRIDES --- */
             
+            // 1. Base Color Display Updater (Uses SVG Image)
+            function updateBaseDisplay(hex) {
+                const disp = document.getElementById('baseColorDisplay');
+                const svgBG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Crect width='10' height='10' fill='${encodeURIComponent(hex)}'/%3E%3C/svg%3E`;
+                
+                disp.style.backgroundImage = `url("${svgBG}")`;
+                disp.style.backgroundSize = 'cover';
+                disp.style.backgroundColor = 'transparent'; 
+                
+                // Contrast Check
+                const hsl = hexToHSL(hex);
+                disp.style.color = hsl.l > 50 ? 'black' : 'white';
+                disp.innerText = hex.toUpperCase();
+            }
+            
+            // 2. Override Generate Function to use SVG Strips
+            generate = function() {
+                const base = document.getElementById('baseColor').value;
+                updateBaseDisplay(base); // Sync the visual wrapper
+                
+                const mode = document.getElementById('algoMode').value;
+                const output = document.getElementById('genOutput');
+                const hsl = hexToHSL(base);
+                output.innerHTML = '';
+                let palette = [];
+            
+                const addStrip = (h, s, l, role) => {
+                    const hex = hslToHex(h % 360, Math.max(0,Math.min(100,s)), Math.max(0,Math.min(100,l)));
+                    palette.push(hex);
+                    const liner = getPanelLiner(hex);
+                    const div = document.createElement('div');
+                    div.className = 'gen-strip';
+                    
+                    // --- SVG TRICK FOR STRIPS ---
+                    const svgBG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Crect width='10' height='10' fill='${encodeURIComponent(hex)}'/%3E%3C/svg%3E`;
+                    div.style.backgroundImage = `url("${svgBG}")`;
+                    div.style.backgroundSize = 'cover';
+                    div.style.backgroundColor = 'transparent';
+                    
+                    div.style.color = l > 50 ? 'black' : 'white';
+                    div.onclick = () => copy(hex);
+                    
+                    div.innerHTML = `
+                        <div style="display:flex; flex-direction:column; justify-content:center;">
+                            <span style="font-weight:bold;">${role}</span>
+                            <span style="font-size:0.8em; opacity:0.8;">${hex}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="liner-tag"><span class="liner-dot" style="background:${liner.color}"></span> ${liner.name}</div>
+                            <button class="mix-btn-small" onclick="sendToMixer(event, '${hex}')">🧪 MIX</button>
+                        </div>
+                    `;
+                    output.appendChild(div);
+                };
+            
+                // Re-run Algorithm Logic
+                addStrip(hsl.h, hsl.s, hsl.l, "MAIN ARMOR");
+            
+                if(mode === 'complementary') {
+                    addStrip(hsl.h + 180, hsl.s, hsl.l - 20, "TORSO / FEET");
+                    addStrip(hsl.h + 30, 80, 50, "ACCENT / VENTS");
+                    addStrip(hsl.h, 0, 25, "FRAME / JOINTS");
+                } else if (mode === 'triadic') {
+                    addStrip(hsl.h + 120, hsl.s, hsl.l, "SECONDARY");
+                    addStrip(hsl.h + 240, 90, 60, "ACCENTS");
+                    addStrip(hsl.h, 0, 90, "WHITE FRAME");
+                } else if (mode === 'analogous') {
+                    addStrip(hsl.h + 30, hsl.s, hsl.l, "CAMO 1");
+                    addStrip(hsl.h - 30 + 360, hsl.s, hsl.l - 10, "CAMO 2");
+                    addStrip(hsl.h, 10, 20, "DARK MECHANICS");
+                } else if (mode === 'split') {
+                    addStrip(hsl.h + 150, hsl.s, hsl.l, "SPLIT 1");
+                    addStrip(hsl.h + 210, hsl.s, hsl.l, "SPLIT 2");
+                    addStrip(hsl.h, 0, 15, "INNER FRAME");
+                } else if (mode === 'monochromatic') {
+                    addStrip(hsl.h, hsl.s, hsl.l - 20, "DARK PANEL");
+                    addStrip(hsl.h, hsl.s, hsl.l - 40, "DEEP SHADE");
+                    addStrip(hsl.h, 10, 20, "MECHANICS");
+                } else if (mode === 'tetradic') {
+                    addStrip(hsl.h + 90, hsl.s, hsl.l, "SECONDARY");
+                    addStrip(hsl.h + 180, hsl.s, hsl.l, "CONTRAST");
+                    addStrip(hsl.h + 270, hsl.s, hsl.l, "ACCENT");
+                } else if (mode === 'industrial') {
+                    addStrip(hsl.h, Math.max(0, hsl.s - 40), hsl.l - 10, "LOW VIS MAIN");
+                    addStrip(hsl.h, 10, 30, "JOINT / FRAME");
+                    addStrip(hsl.h, 5, 80, "MARKING / DETAIL");
+                } else if (mode === 'aoki') {
+                    addStrip(hsl.h, hsl.s - 20, hsl.l - 5, "PRIMARY ARMOR");
+                    addStrip(hsl.h, hsl.s - 25, hsl.l - 15, "SUB-ARMOR (DARKER)");
+                    addStrip(15, 90, 55, "SAFETY ORANGE (SENSORS)");
+                    addStrip(hsl.h, 5, 20, "TECH-GREY FRAME");
+                } else if (mode === 'g3_shift') {
+                    addStrip(hsl.h, hsl.s * 0.5, hsl.l - 10, "G-3 PRIMARY");
+                    addStrip(hsl.h + 180, 15, 30, "DE-SATURATED CONTRAST");
+                    addStrip(45, 20, 70, "WARM WHITE");
+                    addStrip(hsl.h, 0, 15, "STEEL FRAME");
+                } else if (mode === 'mp_grunt') {
+                    addStrip(hsl.h, hsl.s, hsl.l, "PRIMARY GRUNT");
+                    addStrip(hsl.h + 25, hsl.s - 10, hsl.l - 5, "SECONDARY ARMOR");
+                    addStrip(hsl.h + 180, 10, 25, "COMMANDER ACCENT");
+                    addStrip(hsl.h, 5, 15, "DARK FRAME");
+                } else if (mode === 'studio_pro') {
+                    addStrip(hsl.h, hsl.s, hsl.l, "STUDIO MAIN");
+                    addStrip(hsl.h, Math.max(0, hsl.s - 5), Math.max(0, hsl.l - 12), "PANEL VARIATION");
+                    addStrip(hsl.h + 160, 95, 50, "SULPHUR GLOW (EYES)");
+                    addStrip(0, 0, 29, "PRO FRAME (#4A4A4A)");
+                }
+            
+                currentPalette = palette;
+                updatePreview(palette);
+            }
+            
+            // Initial Run to set correct color on load
+            updateBaseDisplay(document.getElementById('baseColor').value);            
     </script>
 
     <script>
@@ -2223,4 +2341,5 @@
 </body>
 
 </html>
+
 
