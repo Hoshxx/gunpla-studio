@@ -14,6 +14,7 @@
 
     <style>
         :root {
+			color-scheme: only dark;
             --bg: #0f1014;
             --surface: #1b1d24;
             --border: #2d303a;
@@ -22,6 +23,9 @@
             --accent-red: #e61e25;
             --link: #4da6ff;
             --success: #00e676;
+        }
+		img, svg, video, canvas, .pigment-btn, .h-swatch, .c-strip, .r-swatch, .mix-bowl {
+            color-scheme: only light; 
         }
 		* {
 		    box-sizing: border-box !important;
@@ -638,34 +642,45 @@
     </div>
 
     <!-- === PIGMENT MIXER TAB === -->
-    <div id="mixer" class="view-section">
-        <div class="mixer-container">
-            <div class="mixer-controls">
-                <select id="mixerBrand" onchange="renderPigments()">
-                    <option value="mr">Mr. Color (Lacquer)</option>
-                    <option value="gaia">Gaia Notes (Lacquer)</option>
-                    <option value="vallejo">Vallejo (Acrylic)</option>
-                    <option value="tamiya">Tamiya (Acrylic)</option>
-                </select>
-                <div style="flex:1; display:flex; align-items:center; color:#888; font-size:0.8rem;">
-                    *Uses subtractive (CMYK) mixing logic like real pigments.
-                </div>
-            </div>
-            
-            <div class="pigment-grid" id="pigmentGrid">
-                <!-- Pigment buttons generated here -->
-            </div>
-
-            <div class="bench-card">
-                <div class="mix-bowl" id="mixBowl">Empty Bowl</div>
-                <div class="mix-controls-row">
-                    <span style="color:#888; font-size:0.9rem;">CURRENT RECIPE</span>
-                    <button class="mini-btn btn-dl" onclick="resetMix()" style="max-width:80px;">CLEAR</button>
-                </div>
-                <div class="mix-list" id="mixList"></div>
-            </div>
-        </div>
-    </div>
+	<div id="mixer" class="view-section">
+	    <div class="mixer-container">
+	        <div class="card" style="padding:15px; border-left:4px solid var(--accent); margin-bottom:15px; background:var(--surface); border:1px solid var(--border); border-radius:8px;">
+	            <h3 style="margin-top:0; color:white; font-size:1rem;">Reverse Recipe Generator</h3>
+	            <div style="display:flex; gap:10px;">
+	                <input type="text" id="recipeSearchInput" placeholder="#FF0000 or Red" class="search-bar" style="margin:0 !important;">
+	                <button class="action-btn" style="flex:1; background:var(--accent); color:black;" onclick="generateRecipeFromInput()">GENERATE</button>
+	            </div>
+	        </div>
+	
+	        <div class="mixer-controls">
+	            <select id="mixerBrand" onchange="renderPigments()">
+	                <option value="mr">Mr. Color (Lacquer)</option>
+	                <option value="gaia">Gaia Notes (Lacquer)</option>
+	                <option value="vallejo">Vallejo (Acrylic)</option>
+	                <option value="tamiya">Tamiya (Acrylic)</option>
+	            </select>
+	            <div style="flex:1; display:flex; align-items:center; color:#888; font-size:0.8rem; justify-content: flex-end;">
+	                 <button class="mini-btn btn-dl" onclick="resetMix()" style="max-width:80px;">RESET</button>
+	            </div>
+	        </div>
+	        
+	        <div class="pigment-grid" id="pigmentGrid">
+	            </div>
+	
+	        <div class="bench-card">
+	            <div class="mix-bowl" id="mixBowl" onclick="copyBowlColor()" style="cursor:pointer; position:relative;">
+	                <span id="bowlText">Empty Bowl</span>
+	                <div id="bowlHex" style="font-size:0.8rem; font-weight:normal; opacity:0.8; margin-top:5px; display:none;"></div>
+	                <div style="position:absolute; bottom:10px; right:10px; font-size:0.7rem; opacity:0.6;">📋 TAP TO COPY</div>
+	            </div>
+	
+	            <div class="mix-controls-row">
+	                <span style="color:#888; font-size:0.9rem;">CURRENT RECIPE</span>
+	            </div>
+	            <div class="mix-list" id="mixList"></div>
+	        </div>
+	    </div>
+	</div>
 
     <!-- === PAINT LAB TAB === -->
 		<div id="paintlab" class="view-section">
@@ -1439,15 +1454,19 @@
             calculateMix();
         }
 
-        function calculateMix() {
+		function calculateMix() {
             const bowl = document.getElementById('mixBowl');
+            const bowlText = document.getElementById('bowlText');
+            const bowlHexDisplay = document.getElementById('bowlHex');
             const list = document.getElementById('mixList');
             
             if(mixPalette.length === 0) {
                 bowl.style.backgroundColor = "#fff";
-                bowl.innerText = "Empty Bowl";
+                bowlText.innerText = "Empty Bowl";
+                bowlHexDisplay.style.display = "none";
                 bowl.style.color = "black";
                 list.innerHTML = "";
+                bowl.dataset.hex = ""; // Clear stored hex
                 return;
             }
 
@@ -1457,7 +1476,7 @@
                 const rgb = hexToRgb(p.hex);
                 const cmyk = rgbToCmyk(rgb.r, rgb.g, rgb.b);
                 
-                // Adjust for Tinting Strength (Black is strong, White is weak)
+                // Adjust for Tinting Strength
                 let strength = 1.0;
                 if (p.hex.toUpperCase() === "#FFFFFF" || p.name.toLowerCase().includes("white")) strength = 0.4;
                 if (p.hex === "#000000" || p.name.toLowerCase().includes("black")) strength = 2.5;
@@ -1474,13 +1493,21 @@
             const avgY = Math.min(1, totY / totalDrops);
             const avgK = Math.min(1, totK / totalDrops);
             
-            const resultRgb = cmykToRgb(avgC, avgM, avgY, avgK);
-            bowl.style.backgroundColor = resultRgb;
-            bowl.innerText = "MIXED COLOR";
+            const resultRgbString = cmykToRgb(avgC, avgM, avgY, avgK); 
             
-            // Auto-contrast for text on the bowl
-            const rgbVal = resultRgb.match(/\d+/g);
-            const brightness = (rgbVal[0]*299 + rgbVal[1]*587 + rgbVal[2]*114) / 1000;
+            // --- NEW: Calculate Hex for Copying ---
+            const rgbValues = resultRgbString.match(/\d+/g).map(Number);
+            const resultHex = rgbToHex(rgbValues[0], rgbValues[1], rgbValues[2]);
+
+            bowl.style.backgroundColor = resultHex;
+            bowl.dataset.hex = resultHex; // Store it for the click event
+
+            bowlText.innerText = "MIXED COLOR";
+            bowlHexDisplay.innerText = resultHex;
+            bowlHexDisplay.style.display = "block";
+            
+            // Auto-contrast text
+            const brightness = (rgbValues[0]*299 + rgbValues[1]*587 + rgbValues[2]*114) / 1000;
             bowl.style.color = brightness > 125 ? "black" : "white";
 
             list.innerHTML = '';
@@ -1520,10 +1547,47 @@
             else mixPalette.push({ ...paint, count: count });
         }
 
-        function sendToMixer(e, hex) {
+		function sendToMixer(e, hex) {
             e.stopPropagation(); 
             switchTab('mixer', document.getElementById('tab-mixer'));
+            generateRecipeLogic(hex);
+        }
+
+        // --- NEW: Copy Bowl Color ---
+        function copyBowlColor() {
+            const bowl = document.getElementById('mixBowl');
+            const hex = bowl.dataset.hex;
+            if (hex) {
+                copy(hex);
+                if(confirm("Color copied! Go to Paint Bench to find matches?")) {
+                     switchTab('bench', document.querySelector('.tab:nth-child(4)'));
+                     document.getElementById('matchPicker').value = hex;
+                     runMatcher(hex);
+                }
+            } else {
+                showToast("Bowl is empty!");
+            }
+        }
+
+        // --- NEW: Generate Recipe from Input Box ---
+        function generateRecipeFromInput() {
+            const input = document.getElementById('recipeSearchInput').value.trim();
+            if (!input) { showToast("Please enter a Hex Code"); return; }
             
+            let hex = input;
+            if (!hex.startsWith("#") && /^[0-9A-Fa-f]{6}$/i.test(hex)) {
+                hex = "#" + hex;
+            }
+
+            if (!/^#[0-9A-F]{6}$/i.test(hex)) {
+                showToast("Invalid Hex Code");
+                return;
+            }
+            generateRecipeLogic(hex);
+        }
+
+        // --- NEW: Core Recipe Logic (Shared) ---
+        function generateRecipeLogic(hex) {
             const brand = document.getElementById('mixerBrand').value;
             mixPalette = []; // Reset current mix
             
@@ -1532,13 +1596,10 @@
             const hsl = hexToHSL(hex);
             const cmyk = rgbToCmyk(rgb.r, rgb.g, rgb.b);
 
-            // Target 20 drops for better resolution
             const targetDrops = 20;
 
-            // Handle Black (K) - scaled down because it's overpowering
             let kDrops = Math.round(cmyk.k * (targetDrops * 0.4)); 
             
-            // Handle White (W) - lighter colors need a white base
             let wDrops = 0;
             if (hsl.l > 50) {
                 wDrops = Math.round(((hsl.l - 40) / 60) * targetDrops);
@@ -1556,7 +1617,6 @@
             if (kDrops > 0) addDrops(primaries.k, kDrops);
             if (wDrops > 0) addDrops(primaries.w, wDrops);
 
-            // Safety check for very light colors
             if (mixPalette.length === 0) addDrops(primaries.w, 10);
 
             calculateMix();
@@ -2184,6 +2244,7 @@
 </body>
 
 </html>
+
 
 
 
