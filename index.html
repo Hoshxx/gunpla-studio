@@ -566,40 +566,7 @@
         }
 
         .iso-val { font-family: monospace; color: var(--success); font-weight: bold; }
-		/* --- ANDROID DARK MODE FIXES --- */
 
-			/* 1. Tell the browser: "I handled the colors, do not touch them" */
-			:root {
-			    color-scheme: dark;
-			}
-			
-			* {
-			    /* This is the magic command to stop Android from dimming/inverting your colors */
-			    forced-color-adjust: none !important; 
-			}
-			
-			/* 2. Fix the Inputs & Dropdowns (Grey Text Issue) */
-			input, select, textarea {
-			    background-color: #252830 !important; /* Force the dark grey background */
-			    color: #ffffff !important;           /* Force PURE WHITE text */
-			    border: 1px solid #444 !important;   /* Make the border visible */
-			    opacity: 1 !important;               /* Stop system dimming */
-			    -webkit-text-fill-color: #ffffff !important; /* Android-specific override */
-			}
-			
-			/* 3. Fix the "Generate" Button (The Muddy Yellow Issue) */
-			.gen-btn {
-			    background-color: var(--accent) !important;
-			    color: #000000 !important; /* Force Black text on Yellow */
-			    filter: none !important;   /* Remove any system dimming filters */
-			}
-			
-			/* 4. Fix the Pigment Buttons (The "White is Grey" Issue) */
-			.pigment-btn {
-			    color-scheme: dark !important; /* Stop telling it to be 'light' */
-			    /* Ensure the background color is the raw hex value */
-			    background-blend-mode: normal !important; 
-			}
 			/* --- AGGRESSIVE DARK MODE OVERRIDE (THE GRADIENT TRICK) --- */
 		
 		    /* 1. Fix Inputs: Use a gradient to trick the browser */
@@ -2327,6 +2294,7 @@
 </body>
 
 </html>
+
 
 
 
