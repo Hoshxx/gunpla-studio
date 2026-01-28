@@ -1,5 +1,5 @@
 /* === sw.js (Version 3.3) === */
-const CACHE_NAME = 'gunpla-studio-v4.4; // <--- Increment this string to force update
+const CACHE_NAME = 'gunpla-studio-v4.5; // <--- Increment this string to force update
 const ASSETS_TO_CACHE = [
     './',                 // The root index
     './index.html',       // The main file
