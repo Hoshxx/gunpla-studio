@@ -660,14 +660,19 @@
                 <!-- Pigment buttons generated here -->
             </div>
 
-            <div class="bench-card">
-                <div class="mix-bowl" id="mixBowl">Empty Bowl</div>
-                <div class="mix-controls-row">
-                    <span style="color:#888; font-size:0.9rem;">CURRENT RECIPE</span>
-                    <button class="mini-btn btn-dl" onclick="resetMix()" style="max-width:80px;">CLEAR</button>
-                </div>
-                <div class="mix-list" id="mixList"></div>
-            </div>
+			<div class="bench-card">
+			    <div class="mix-bowl" id="mixBowl" style="cursor: pointer; flex-direction: column;" onclick="copyMixedHex()" data-hex="">
+			        Empty Bowl
+			    </div>
+			    <div class="mix-controls-row">
+			        <span style="color:#888; font-size:0.9rem;">CURRENT RECIPE</span>
+			        <div style="display: flex; gap: 5px;">
+			            <button class="mini-btn btn-match" onclick="copyMixedHex()" style="max-width:80px;">COPY HEX</button>
+			            <button class="mini-btn btn-dl" onclick="resetMix()" style="max-width:80px;">CLEAR</button>
+			        </div>
+			    </div>
+			    <div class="mix-list" id="mixList"></div>
+			</div>
         </div>
     </div>
 
@@ -1452,14 +1457,15 @@
             calculateMix();
         }
 
-        function calculateMix() {
+		function calculateMix() {
             const bowl = document.getElementById('mixBowl');
             const list = document.getElementById('mixList');
             
             if(mixPalette.length === 0) {
                 bowl.style.backgroundColor = "#fff";
-                bowl.innerText = "Empty Bowl";
+                bowl.innerHTML = "Empty Bowl";
                 bowl.style.color = "black";
+                bowl.dataset.hex = ""; 
                 list.innerHTML = "";
                 return;
             }
@@ -1469,8 +1475,6 @@
             mixPalette.forEach(p => {
                 const rgb = hexToRgb(p.hex);
                 const cmyk = rgbToCmyk(rgb.r, rgb.g, rgb.b);
-                
-                // Adjust for Tinting Strength (Black is strong, White is weak)
                 let strength = 1.0;
                 if (p.hex.toUpperCase() === "#FFFFFF" || p.name.toLowerCase().includes("white")) strength = 0.4;
                 if (p.hex === "#000000" || p.name.toLowerCase().includes("black")) strength = 2.5;
@@ -1489,10 +1493,14 @@
             
             const resultRgb = cmykToRgb(avgC, avgM, avgY, avgK);
             bowl.style.backgroundColor = resultRgb;
-            bowl.innerText = "MIXED COLOR";
             
-            // Auto-contrast for text on the bowl
+            // This part extracts the HEX so you can copy it
             const rgbVal = resultRgb.match(/\d+/g);
+            const hexResult = rgbToHex(parseInt(rgbVal[0]), parseInt(rgbVal[1]), parseInt(rgbVal[2]));
+            
+            bowl.dataset.hex = hexResult; // Save it here hidden
+            bowl.innerHTML = `<span style="font-size: 1.4rem;">${hexResult}</span><span style="font-size: 0.6rem; opacity: 0.7;">TAP TO COPY</span>`;
+            
             const brightness = (rgbVal[0]*299 + rgbVal[1]*587 + rgbVal[2]*114) / 1000;
             bowl.style.color = brightness > 125 ? "black" : "white";
 
@@ -1500,18 +1508,19 @@
             mixPalette.forEach(p => {
                 const item = document.createElement('div');
                 item.className = 'mix-item';
-                item.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <div style="width:12px; height:12px; background:${p.hex}; border-radius:50%; border:1px solid #fff;"></div>
-                        <span>${p.name}</span>
-                    </div>
-                    <div>
-                        <span style="font-weight:bold; margin-right:10px;">${p.count}</span>
-                        <button class="mini-btn" style="padding:2px 8px;" onclick="removeFromMix('${p.name}')">-</button>
-                    </div>
-                `;
+                item.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><div style="width:12px; height:12px; background:${p.hex}; border-radius:50%; border:1px solid #fff;"></div><span>${p.name}</span></div><div><span style="font-weight:bold; margin-right:10px;">${p.count}</span><button class="mini-btn" style="padding:2px 8px;" onclick="removeFromMix('${p.name}')">-</button></div>`;
                 list.appendChild(item);
             });
+        }
+
+        // ADD THIS NEW FUNCTION RIGHT BELOW calculateMix()
+        function copyMixedHex() {
+            const bowl = document.getElementById('mixBowl');
+            const hex = bowl.dataset.hex;
+            if (hex && hex !== "") {
+                copy(hex); // Uses your existing copy function
+                showToast("Mixed Color Copied: " + hex);
+            }
         }
 		
 		// --- HELPER: MAPS MATH TO ACTUAL BOTTLES ---
@@ -2226,6 +2235,7 @@
 </body>
 
 </html>
+
 
 
 
