@@ -716,26 +716,35 @@
 		</div>
 
     <!-- === PAINT BENCH === -->
-    <div id="bench" class="view-section">
-        <div class="bench-grid">
-            <div class="bench-card">
-                <h3 style="margin-top:0; color:var(--accent);">Paint Matcher</h3>
-                <p style="color:#888; font-size:0.9rem;">Pick a color to find the closest real-world Gunpla paints.</p>
-                <div class="color-wrapper" style="margin-bottom:15px;">
-                    <div id="matchDisplay" style="background:#0055A4;">PICK COLOR</div>
-                    <input type="color" id="matchPicker" value="#0055A4" oninput="runMatcher(this.value)">
-                </div>
-                <div id="matchResults"></div>
-            </div>
-            <div class="bench-card">
-                <h3 style="margin-top:0; color:var(--accent);">Mixing Guide</h3>
-                <p style="color:#888; font-size:0.9rem;">Calculated mixing ratio (Drops) for this color.</p>
-                <div id="mixingOutput" class="recipe-box">
-                    <span style="color:#555;">Select a color to see recipe.</span>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div id="bench" class="view-section">
+	        <div class="bench-grid">
+	            <div class="bench-card">
+	                <h3 style="margin-top:0; color:var(--accent);">Paint Matcher & Hex Search</h3>
+	                <p style="color:#888; font-size:0.9rem;">Paste a Hex code or pick a color to find real-world paints.</p>
+	                
+	                <input type="text" id="hexInput" placeholder="#FFFFFF" 
+	                       style="width:100%; padding:12px; margin-bottom:10px; border-radius:6px; border:1px solid var(--border); background:#111; color:var(--accent); font-family:monospace; text-align:center; font-size:1.1rem;"
+	                       oninput="handleHexPaste(this.value)">
+	
+	                <div class="color-wrapper" style="margin-bottom:15px;">
+	                    <div id="matchDisplay" style="background:#0055A4;">PICK COLOR</div>
+	                    <input type="color" id="matchPicker" value="#0055A4" oninput="handlePickerInput(this.value)">
+	                </div>
+	                <div id="matchResults"></div>
+	            </div>
+	            
+	            <div class="bench-card">
+	                <h3 style="margin-top:0; color:var(--accent);">10-Drop Recipe Guide</h3>
+	                <p style="color:#888; font-size:0.9rem;">Calculated mixing ratio for this specific hex.</p>
+	                <div id="mixingOutput" class="recipe-box">
+	                    <span style="color:#555;">Paste or select a color to see recipe.</span>
+	                </div>
+	                <button class="action-btn" id="benchToMixerBtn" style="margin-top:15px; display:none; background:#444;" onclick="sendBenchToMixer()">
+	                    🧪 OPEN IN ADVANCED MIXER
+	                </button>
+	            </div>
+	        </div>
+	    </div>
 
     <!-- === MY HANGAR === -->
     <div id="hangar" class="view-section">
@@ -1566,7 +1575,36 @@
             calculateMix();
             showToast(`Recipe Generated for ${hex}`);
         }
-
+			// --- HEX PASTE & INPUT HANDLERS ---
+	        function handleHexPaste(val) {
+	            // Clean the input (remove spaces, ensure it starts with #)
+	            let hex = val.trim();
+	            if (!hex.startsWith('#')) hex = '#' + hex;
+	            
+	            // Validate if it's a real hex code
+	            if (/^#([0-9A-F]{3}){1,2}$/i.test(hex)) {
+	                document.getElementById('matchPicker').value = (hex.length === 4) ? expandHex(hex) : hex;
+	                runMatcher(hex);
+	                document.getElementById('benchToMixerBtn').style.display = 'block';
+	            }
+	        }
+	
+	        function handlePickerInput(hex) {
+	            document.getElementById('hexInput').value = hex.toUpperCase();
+	            runMatcher(hex);
+	            document.getElementById('benchToMixerBtn').style.display = 'block';
+	        }
+	
+	        function expandHex(hex) {
+	            return '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+	        }
+	
+	        // Bridge to the advanced Pigment Mixer tab
+	        function sendBenchToMixer() {
+	            const hex = document.getElementById('matchPicker').value;
+	            // Using the existing sendToMixer logic from your v2.0
+	            sendToMixer(new Event('click'), hex);
+	        }
         // --- MATCHING & MIXING (Bench) ---
 			function runMatcher(hex) {
             // 1. Update the UI color circles
@@ -2188,6 +2226,7 @@
 </body>
 
 </html>
+
 
 
 
