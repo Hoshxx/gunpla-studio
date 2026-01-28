@@ -567,53 +567,39 @@
 
         .iso-val { font-family: monospace; color: var(--success); font-weight: bold; }
 
-			/* --- AGGRESSIVE DARK MODE OVERRIDE (THE GRADIENT TRICK) --- */
+		/* --- NUCLEAR DARK MODE FIX (IMAGE OVERRIDE) --- */
 		
-		    /* 1. Fix Inputs: Use a gradient to trick the browser */
+		    /* 1. Fix Inputs: Force a gradient background */
 		    input, select, textarea {
-		        /* We fake a solid color using a gradient so the phone won't invert it */
-		        background-image: linear-gradient(#252830, #252830) !important; 
+		        background-image: linear-gradient(#252830, #252830) !important;
 		        background-color: transparent !important;
-		        
-		        /* Force text to be pure white */
 		        color: #ffffff !important;
-		        -webkit-text-fill-color: #ffffff !important;
-		        
 		        border: 1px solid #555 !important;
-		        
-		        /* Break the element out of the phone's filter layer */
-		        isolation: isolate !important; 
+		        -webkit-text-fill-color: #ffffff !important;
 		    }
 		
 		    /* 2. Fix the Yellow Buttons (Generate / Match) */
 		    .gen-btn, .btn-match {
-		        /* Trick: Gradient of pure yellow */
-		        background-image: linear-gradient(#f7c600, #f7c600) !important;
+		        /* We shift the color slightly (#f7c600 to #f7c601) so the browser can't optimize it to a solid color */
+		        background-image: linear-gradient(180deg, #f7c600, #f7c601) !important;
 		        background-color: transparent !important;
-		        
-		        /* Force text to be Black */
 		        color: #000000 !important;
-		        -webkit-text-fill-color: #000000 !important;
-		        
 		        filter: none !important;
-		        isolation: isolate !important;
+		        isolation: isolate;
 		    }
 		
-		    /* 3. Fix the Pigment Buttons (Red, Blue, etc.) */
+		    /* 3. Fix the Pigment Buttons wrapper */
 		    .pigment-btn {
-		        /* This prevents the colors from looking "muddy" or dim */
-		        filter: brightness(1.1) !important; 
-		        isolation: isolate !important;
+		        filter: none !important;
+		        isolation: isolate;
 		        border: 1px solid rgba(255,255,255,0.2) !important;
 		    }
-		
-		    /* 4. Fix the Placeholder Text (The hint inside the box) */
-		    ::placeholder {
-		        color: rgba(255, 255, 255, 0.5) !important;
-		        -webkit-text-fill-color: rgba(255, 255, 255, 0.5) !important;
-		        opacity: 1 !important;
+		    
+		    /* 4. Fix the Mix Bowl (When white) */
+		    .mix-bowl {
+		        background-image: linear-gradient(#ffffff, #ffffff) !important; 
+		        color: black !important;
 		    }
-		
     </style>
 </head>
 <body>
@@ -1462,26 +1448,31 @@
         }
 
         // --- MIXER TAB LOGIC (New) ---
-        function renderPigments() {
-            const brand = document.getElementById('mixerBrand').value;
-            const grid = document.getElementById('pigmentGrid');
-            const pigments = PIGMENTS[brand];
-            grid.innerHTML = '';
-            
-            pigments.forEach(p => {
-                const btn = document.createElement('div');
-                btn.className = 'pigment-btn';
-                btn.style.backgroundColor = p.hex;
-                // Text color contrast check
-                const hsl = hexToHSL(p.hex);
-                btn.style.color = hsl.l > 60 ? '#000' : '#fff';
-                btn.style.textShadow = hsl.l > 60 ? 'none' : '0 1px 2px black';
-                
-                btn.innerHTML = `<span>+ DROP</span><span>${p.name.split(' ')[1] || p.name}</span>`;
-                btn.onclick = () => addToMix(p);
-                grid.appendChild(btn);
-            });
-        }
+		function renderPigments() {
+		    const brand = document.getElementById('mixerBrand').value;
+		    const grid = document.getElementById('pigmentGrid');
+		    const pigments = PIGMENTS[brand];
+		    grid.innerHTML = '';
+		    
+		    pigments.forEach(p => {
+		        const btn = document.createElement('div');
+		        btn.className = 'pigment-btn';
+		        
+		        /* --- THE FIX: Use Linear Gradient (Image) instead of Background Color --- */
+		        /* We use the same color twice to make it look solid, but the phone sees an image */
+		        btn.style.backgroundImage = `linear-gradient(to bottom, ${p.hex}, ${p.hex})`;
+		        btn.style.backgroundColor = 'transparent'; 
+		        
+		        // Text color contrast check
+		        const hsl = hexToHSL(p.hex);
+		        btn.style.color = hsl.l > 60 ? '#000' : '#fff';
+		        btn.style.textShadow = hsl.l > 60 ? 'none' : '0 1px 2px black';
+		        
+		        btn.innerHTML = `<span>+ DROP</span><span>${p.name.split(' ')[1] || p.name}</span>`;
+		        btn.onclick = () => addToMix(p);
+		        grid.appendChild(btn);
+		    });
+		}
 
         function addToMix(paint) {
             const existing = mixPalette.find(x => x.name === paint.name);
@@ -2294,6 +2285,7 @@
 </body>
 
 </html>
+
 
 
 
