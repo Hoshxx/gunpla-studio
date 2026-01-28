@@ -684,9 +684,10 @@
 		        <div class="generator-box" style="max-width:300px;">
 		            <h3 style="margin:0 0 10px 0;">Paint Lab</h3>
 		            
-		            <button id="samplerBtn" class="action-btn" style="background:#444; margin-bottom:10px;" onclick="toggleSampler()">
-		                🔍 EYEDROPPER: OFF
-		            </button>
+					<div style="display:flex; gap:10px; margin-bottom:10px;">
+						<button id="samplerBtn" class="action-btn" style="flex:1; background:#444;" onclick="toggleSampler()">🔍 EYEDROPPER</button>
+						<button id="bucketBtn" class="action-btn" style="flex:1; background:#444;" onclick="toggleBucket()">🪣 BUCKET: OFF</button>
+					</div>
 		        
 		            <label class="file-upload-btn">📂 Upload Own Gunpla Image<input type="file" id="imageLoader" accept="image/*" style="display:none;" onchange="handleImageUpload(event)"></label>
 		            
@@ -1713,6 +1714,82 @@
     html += `<div style="font-size:0.8rem; color:#666; margin-top:10px;">*Expert Tip: Neutral Grey prevents dark colors from looking "flat".</div>`;
     document.getElementById('mixingOutput').innerHTML = html;
 }
+
+		let isBucketMode = false;
+
+		// Toggles the bucket mode and ensures they aren't both on at once
+		function toggleBucket() {
+			isBucketMode = !isBucketMode;
+			if (isBucketMode) isSampling = false; 
+			
+			const btn = document.getElementById('bucketBtn');
+			const sBtn = document.getElementById('samplerBtn');
+			
+			btn.innerText = isBucketMode ? "🪣 BUCKET: ON" : "🪣 BUCKET: OFF";
+			btn.style.background = isBucketMode ? "var(--accent)" : "#444";
+			
+			sBtn.style.background = "#444";
+			sBtn.innerText = "🔍 EYEDROPPER: OFF";
+		}
+
+		// The Professional Flood Fill Algorithm
+		// Optimized, Crash-Proof Flood Fill
+		function floodFill(ctx, x, y, fillColor, tolerance = 40) {
+			const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+			const data = imageData.data;
+			const width = imageData.width;
+			const height = imageData.height;
+
+			// Use a Visited array to prevent infinite loops and memory crashes
+			const visited = new Uint8Array(width * height);
+
+			const targetPos = (Math.floor(y) * width + Math.floor(x)) * 4;
+			const targetR = data[targetPos];
+			const targetG = data[targetPos + 1];
+			const targetB = data[targetPos + 2];
+			const targetA = data[targetPos + 3];
+
+			const fillRgb = hexToRgb(fillColor);
+			
+			// Safety check: Don't fill if target is already the fill color
+			if (matchColor(targetR, targetG, targetB, targetA, fillRgb.r, fillRgb.g, fillRgb.b, 255, 0)) return;
+
+			const stack = [[Math.floor(x), Math.floor(y)]];
+
+			while (stack.length) {
+				const [curX, curY] = stack.pop();
+				const pixelIdx = curY * width + curX;
+				const pos = pixelIdx * 4;
+
+				// Skip if we've been here or it doesn't match the color we want to replace
+				if (visited[pixelIdx]) continue;
+				
+				if (matchColor(data[pos], data[pos+1], data[pos+2], data[pos+3], targetR, targetG, targetB, targetA, tolerance)) {
+					// Mark as visited and change color
+					visited[pixelIdx] = 1;
+					data[pos] = fillRgb.r;
+					data[pos+1] = fillRgb.g;
+					data[pos+2] = fillRgb.b;
+					data[pos+3] = 255;
+
+					// Add neighbors to stack
+					if (curX > 0) stack.push([curX - 1, curY]);
+					if (curX < width - 1) stack.push([curX + 1, curY]);
+					if (curY > 0) stack.push([curX, curY - 1]);
+					if (curY < height - 1) stack.push([curX, curY + 1]);
+				}
+			}
+			ctx.putImageData(imageData, 0, 0);
+		}
+
+		// Updated matchColor to be more strict with alpha/transparency
+		function matchColor(r1, g1, b1, a1, r2, g2, b2, a2, tolerance) {
+			if (a1 < 10 && a2 < 10) return true; // Both transparent
+			return Math.abs(r1 - r2) <= tolerance &&
+				   Math.abs(g1 - g2) <= tolerance &&
+				   Math.abs(b1 - b2) <= tolerance;
+		}
+
         // --- PAINT LAB LOGIC ---
         function updateColorDisplay(color) {
             const disp = document.getElementById('colorDisplay');
@@ -1796,35 +1873,37 @@
 
 			// --- PHOTO INTERACTION ENGINE ---
 			document.getElementById('paintCanvas').onclick = function(e) {
-			    if (!uploadedImage) return;
-			    
-			    const rect = this.getBoundingClientRect();
-			    const x = (e.clientX - rect.left) * (this.width / rect.width);
-			    const y = (e.clientY - rect.top) * (this.height / rect.height);
-			    const ctx = this.getContext('2d');
-			    
-			    if (isSampling) {
-			        const pixel = ctx.getImageData(x, y, 1, 1).data;
-			        const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-			        updateColorDisplay(hex);
-			        document.getElementById('paintColorPicker').value = hex;
-			        toggleSampler(); 
-			        showToast("Color Sampled!");
-			    } else {
-			        // --- PRO PAINT ENGINE (Multiply Mode) ---
-			        const color = document.getElementById('paintColorPicker').value;
-			        const size = document.getElementById('brushSize').value;
-			        
-			        ctx.save(); 
-			        ctx.globalCompositeOperation = 'multiply'; // The secret sauce!
-			        ctx.fillStyle = color;
-			        ctx.globalAlpha = 0.7; 
-			        
-			        ctx.beginPath();
-			        ctx.arc(x, y, size, 0, Math.PI * 2);
-			        ctx.fill();
-			        ctx.restore(); 
-			    }
+				if (!uploadedImage) return;
+				
+				const rect = this.getBoundingClientRect();
+				const x = (e.clientX - rect.left) * (this.width / rect.width);
+				const y = (e.clientY - rect.top) * (this.height / rect.height);
+				const ctx = this.getContext('2d');
+				const color = document.getElementById('paintColorPicker').value;
+
+				if (isSampling) {
+					const pixel = ctx.getImageData(x, y, 1, 1).data;
+					const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+					updateColorDisplay(hex);
+					document.getElementById('paintColorPicker').value = hex;
+					toggleSampler(); 
+					showToast("Color Sampled!");
+				} else if (isBucketMode) {
+					// Run the Flood Fill
+					showToast("Filling Part...");
+					floodFill(ctx, x, y, color, 40); 
+				} else {
+					// Standard Brush logic
+					const size = document.getElementById('brushSize').value;
+					ctx.save(); 
+					ctx.globalCompositeOperation = 'color'; // Preserves shadows/highlights
+					ctx.fillStyle = color;
+					ctx.globalAlpha = 1.0; 
+					ctx.beginPath();
+					ctx.arc(x, y, size, 0, Math.PI * 2);
+					ctx.fill();
+					ctx.restore(); 
+				}
 			};
 			
 			// --- ZOOM CONTROLLER (Moved to Global Scope) ---
@@ -2298,31 +2377,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
