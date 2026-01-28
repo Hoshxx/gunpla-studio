@@ -1,50 +1,57 @@
-const CACHE_NAME = 'gunpla-studio-v3.3'; // <--- CHANGE THIS EVERY TIME YOU UPDATE
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json'
+/* === sw.js (Version 3.3) === */
+const CACHE_NAME = 'gunpla-studio-v3.3'; // <--- Increment this string to force update
+const ASSETS_TO_CACHE = [
+    './',                 // The root index
+    './index.html',       // The main file
+    './manifest.json',    // The manifest
+    // Add any images/icons here if you want them offline
 ];
 
-// 1. Install & Cache Assets
+// 1. INSTALL: Force the new SW to wake up immediately
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Force the new version to take over immediately
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('Caching new assets');
-      return cache.addAll(ASSETS);
-    })
-  );
-});
-
-// 2. Activate & Clear Old Caches
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    (async () => {
-      // Take control of all open tabs/windows immediately
-      await clients.claim();
-      
-      // Get all existing cache keys
-      const cacheNames = await caches.keys();
-      
-      // Delete any cache that isn't the current CACHE_NAME
-      await Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('Deleting old cache:', cache);
-            return caches.delete(cache);
-          }
+    // This tells the browser: "Don't wait! Install this version NOW."
+    self.skipWaiting(); 
+    
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            console.log('[SW] Caching assets for ' + CACHE_NAME);
+            return cache.addAll(ASSETS_TO_CACHE);
         })
-      );
-    })()
-  );
+    );
 });
 
-// 3. Fetch (Network-first or Cache-first)
+// 2. ACTIVATE: Delete old caches and take control of the app
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((keyList) => {
+            return Promise.all(keyList.map((key) => {
+                if (key !== CACHE_NAME) {
+                    console.log('[SW] Removing old cache:', key);
+                    return caches.delete(key);
+                }
+            }));
+        }).then(() => {
+            // This tells the SW: "Take control of all open clients instantly."
+            return self.clients.claim(); 
+        })
+    );
+});
+
+// 3. FETCH: Network First, Fallback to Cache (Safest for development)
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Return the cached version if found, otherwise hit the network
-      return response || fetch(event.request);
-    })
-  );
+    event.respondWith(
+        fetch(event.request)
+            .then((response) => {
+                // If network works, return response AND cache it for later
+                const responseClone = response.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseClone);
+                });
+                return response;
+            })
+            .catch(() => {
+                // If network fails, try the cache
+                return caches.match(event.request);
+            })
+    );
 });
