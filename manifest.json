@@ -3,6 +3,12 @@
   "name": "Hosh's Gunpla Paint Studio",
   "icons": [
     {
+      "src": "https://img.icons8.com/color/192/paint-bucket.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
       "src": "https://img.icons8.com/color/512/paint-bucket.png",
       "type": "image/png",
       "sizes": "512x512",
