@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.hosh.gunplastudio",
+        "sha256_cert_fingerprints": ["DE:D7:AD:DF:3E:A1:CC:4E:C1:D4:B1:A0:B5:98:F7:0C:EC:8C:8C:BA:3E:0C:93:41:4E:B0:40:C5:12:0E:55:E8"]
+      }
+    }]
